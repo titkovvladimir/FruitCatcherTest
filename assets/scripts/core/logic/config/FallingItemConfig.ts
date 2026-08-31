@@ -22,7 +22,11 @@ export interface FallingItemConfig {
     readonly radius: number;
     /** Очки за поимку. */
     readonly score: number;
-    /** Что поимка делает с запасом жизней: у фруктов ноль, у мухомора минус один. */
+    /**
+     * Что поимка делает с запасом жизней: у фруктов ноль, у мухомора минус
+     * один. Только вниз: жизнь, которую фрукт дарит, — отдельная механика, а не
+     * знак числа, и пока её нет.
+     */
     readonly lifeChange: number;
     /** Вес в случайном выборе типа: чем больше, тем чаще появляется. */
     readonly weight: number;
@@ -49,7 +53,7 @@ function readItem(raw: unknown, path: string): FallingItemConfig {
         texture: asString(entry.texture, `${path}.texture`),
         radius: asNumber(entry.radius, `${path}.radius`, { min: 1 }),
         score: asNumber(entry.score, `${path}.score`, { min: 0 }),
-        lifeChange: asNumber(entry.lifeChange, `${path}.lifeChange`, { min: -3, max: 3 }),
+        lifeChange: asNumber(entry.lifeChange, `${path}.lifeChange`, { min: -3, max: 0 }),
         weight: asNumber(entry.weight, `${path}.weight`, { min: 0.001 }),
         speed: asNumber(entry.speed, `${path}.speed`, { min: 1 }),
         fall: readFall(entry.fall, `${path}.fall`),

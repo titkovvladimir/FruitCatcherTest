@@ -76,6 +76,15 @@ export function asNumber(value: unknown, path: string, range: NumberRange = {}):
     return value;
 }
 
+/** Целое число: число жизней или размер запаса дробным не бывает. */
+export function asInteger(value: unknown, path: string, range: NumberRange = {}): number {
+    const number = asNumber(value, path, range);
+    if (!Number.isInteger(number)) {
+        throw new ConfigError(path, 'целое число', number);
+    }
+    return number;
+}
+
 export function asOneOf<T extends string>(value: unknown, path: string, allowed: readonly T[]): T {
     // indexOf, а не includes: проект компилируется под ES2015, includes оттуда не виден.
     if (typeof value !== 'string' || allowed.indexOf(value as T) === -1) {
