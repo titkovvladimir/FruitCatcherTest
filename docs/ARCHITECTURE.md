@@ -31,10 +31,18 @@ export interface Subscribable<T = void> {
 }
 
 export class Signal<T = void> implements Subscribable<T> {
+    /** Порог сторожа. 0 — выключен; включает GameRoot в отладочной сборке. */
+    static warnAfter = 0;
+
     private handlers: ((value: T) => void)[] = [];
+
+    constructor(private readonly name = 'signal') {}
 
     on(handler: (value: T) => void): () => void {
         this.handlers.push(handler);
+        if (Signal.warnAfter > 0 && this.handlers.length > Signal.warnAfter) {
+            console.warn(`${this.name}: подписчиков ${this.handlers.length} — похоже на утечку`);
+        }
         return () => { this.handlers = this.handlers.filter(h => h !== handler); };
     }
 
@@ -44,9 +52,15 @@ export class Signal<T = void> implements Subscribable<T> {
 }
 ```
 
-**`on` возвращает функцию отписки** — обязательная часть, не украшение:
-подписались в `onLoad`, отписались в `onDestroy`. Иначе после перезапуска сцены
-обработчики висят на уничтоженных узлах.
+**`on` возвращает функцию отписки** — обязательная часть, не украшение: иначе
+после перезапуска сцены обработчики висят на уничтоженных узлах. Руками её,
+впрочем, никто не хранит — для этого есть сумка подписок ниже.
+
+**Сторож включается кодом, а не импортом.** `Signal` живёт в `utils` и движка не
+знает: `console.warn` есть и в браузере, и в тесте, а `cc/env` потянул бы
+зависимость в слой, который обязан заводиться без сцены. Поэтому порог —
+статическое поле, и выставляет его `GameRoot`: `Signal.warnAfter = DEBUG ? 8 : 0`.
+Имя сигнала передаётся в конструктор: предупреждение без имени бесполезно.
 
 **Наружу сигнал отдаётся только как `Subscribable`** — тогда `emit` снаружи не
 виден, и поднять событие может лишь его владелец. Это ровно то, что в C# даёт
@@ -75,6 +89,44 @@ Subscribable`.
 **Отписка в `onDisable` не отменяет отписку в `onDestroy`**: узел может быть
 уничтожен и активным, например при смене сцены. У пулуемых есть обе, и обе
 идемпотентны — повторный вызов ничего не ломает.
+
+**Подписка руками не пишется — есть сумка.** Решено 30 августа: дисциплина,
+которая держится на внимательности, рано или поздно протекает, а объект из пула
+делает протечку невидимой. Поэтому подписываются только через сумку, и тогда
+забыть отписку нельзя — её никто и не пишет:
+
+```ts
+// utils/SubscriptionBag.ts
+import { Subscribable } from './Signal';
+
+export class SubscriptionBag {
+    private offs: (() => void)[] = [];
+
+    add<T>(signal: Subscribable<T>, handler: (value: T) => void): void {
+        this.offs.push(signal.on(handler));
+    }
+
+    clear(): void {
+        for (const off of this.offs) off();
+        this.offs.length = 0;
+    }
+}
+```
+
+`clear()` идемпотентен, поэтому у пулуемого компонента он стоит и в `onDisable`,
+и в `onDestroy`, а лишний вызов ничего не стоит:
+
+```ts
+private readonly subs = new SubscriptionBag();
+
+onEnable(): void  { this.subs.add(session.scoreChanged, s => this.render(s)); }
+onDisable(): void { this.subs.clear(); }
+onDestroy(): void { this.subs.clear(); }
+```
+
+Сумка закрывает ошибку по построению, сторож в `Signal` ловит то, чего она не
+видит: подписку в обход сумки. Третий уровень — правило линтера «результат
+`on()` нельзя выбрасывать» — остался в бэклоге как необязательный.
 
 ## 3. Сигнал принадлежит объекту, глобальной шины нет
 
@@ -222,6 +274,7 @@ export class LevelSession {
 // ui/ScoreLabel.ts
 import { _decorator, Component, Label } from 'cc';
 import { LevelSession } from '../core/logic/LevelSession';
+import { SubscriptionBag } from '../utils/SubscriptionBag';
 
 const { ccclass, property } = _decorator;
 
@@ -229,16 +282,15 @@ const { ccclass, property } = _decorator;
 export class ScoreLabel extends Component {
     @property(Label) label: Label = null!;
 
-    private unsubscribe: (() => void) | null = null;
+    private readonly subs = new SubscriptionBag();
 
     bind(session: LevelSession): void {
         this.render(session.score);                                  // снимок
-        this.unsubscribe = session.scoreChanged.on(s => this.render(s));
+        this.subs.add(session.scoreChanged, s => this.render(s));
     }
 
     onDestroy(): void {
-        this.unsubscribe?.();
-        this.unsubscribe = null;
+        this.subs.clear();
     }
 
     private render(score: number): void {
@@ -286,6 +338,7 @@ import { _decorator, Component } from 'cc';
 import { LevelSession } from '../core/logic/LevelSession';
 import { ScoreLabel } from '../ui/ScoreLabel';
 import { PauseButton } from '../ui/PauseButton';
+import { SubscriptionBag } from '../utils/SubscriptionBag';
 
 const { ccclass, property } = _decorator;
 
@@ -295,21 +348,18 @@ export class LevelRoot extends Component {
     @property(PauseButton) pauseButton: PauseButton = null!;
 
     private session!: LevelSession;
-    private readonly unsubscribes: (() => void)[] = [];
+    private readonly subs = new SubscriptionBag();
 
     onLoad(): void {
         this.session = new LevelSession();
 
         this.scoreLabel.bind(this.session);
 
-        this.unsubscribes.push(
-            this.pauseButton.clicked.on(() => this.session.pause()),
-        );
+        this.subs.add(this.pauseButton.clicked, () => this.session.pause());
     }
 
     onDestroy(): void {
-        for (const off of this.unsubscribes) off();
-        this.unsubscribes.length = 0;
+        this.subs.clear();
     }
 }
 ```
@@ -328,9 +378,9 @@ Button (движок) → PauseButton._clicked.emit()
   без сцены и движка;
 * **никто не поднимает чужое событие** — `emit` есть только у владельца, снаружи
   виден `Subscribable`, где его нет. Ошибка компиляции, а не находка на отладке;
-* **у каждой подписки есть отписка** — `on` вернул функцию, она лежит в поле или
-  в списке и вызывается в `onDestroy`. При перезапуске сцены висящих
-  обработчиков не остаётся.
+* **у каждой подписки есть отписка** — и не потому, что о ней помнили: подписка
+  идёт через сумку, а сумка чистится в `onDisable` и `onDestroy`. При
+  перезапуске сцены и при возврате в пул висящих обработчиков не остаётся.
 
 Мелочь по TypeScript: `Signal` без параметра — это `Signal<void>`, и `emit()` у
 него вызывается без аргумента; параметр типа `void` разрешено опускать.
@@ -395,7 +445,8 @@ Button (движок) → PauseButton._clicked.emit()
 ```
 assets/scripts/
   utils/
-    Signal.ts                          Signal<T> + Subscribable<T>
+    Signal.ts                          Signal<T> + Subscribable<T> + сторож
+    SubscriptionBag.ts                 подписки скопом, чистятся одной строкой
     NodePool.ts
     random/RandomSource.ts
     random/MathRandomSource.ts
