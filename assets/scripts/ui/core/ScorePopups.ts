@@ -1,4 +1,5 @@
 import { _decorator, Color, Component, Label, Node, NodePool, UITransform } from 'cc';
+import { FallingItemConfig } from '../../core/logic/config/FallingItemConfig';
 
 const { ccclass, property } = _decorator;
 
@@ -7,20 +8,35 @@ const LIFE = 0.7;
 /** На сколько точек она успевает подняться за свою жизнь. */
 const RISE = 90;
 
-/** Надпись в полёте: узел, её возраст и с чего начиналась высота. */
+const GOOD = new Color(255, 255, 255, 255);
+const BAD = new Color(235, 90, 80, 255);
+
+/** Надпись в полёте: узел, её возраст, цвет и с чего начиналась высота. */
 interface Popup {
     readonly node: Node;
     readonly label: Label;
+    readonly color: Color;
     readonly startY: number;
     age: number;
+}
+
+/** Что показать над пойманным; `null` — показывать нечего. */
+interface Shown {
+    readonly text: string;
+    readonly color: Color;
 }
 
 /**
  * Всплывающие числа очков над пойманным.
  *
  * Без них множитель серии виден только по счётчику, который прибавляется рывком
- * и ничего не объясняет: «плюс сорок» над вишней говорит игроку, что серия
- * работает, ровно в тот момент, когда он на неё смотрит.
+ * и ничего не объясняет: «+240» над вишней говорит игроку, что серия работает,
+ * ровно в тот момент, когда он на неё смотрит. Число всплывает уже с
+ * множителем — базовая цена предмета игроку ни о чём не говорит.
+ *
+ * Показывает и плохое. Пустое сердце над мухомором и красные очки над кислым:
+ * до этого игра громко хвалила и молча наказывала, а «+15» над лимоном белым
+ * цветом выглядело наградой за то, что стоило серии.
  *
  * Двигаются в общем тике, а не твином. Твин крутится собственным планировщиком
  * движка и на паузе продолжает лететь; здесь же надпись останавливается вместе
@@ -42,18 +58,24 @@ export class ScorePopups extends Component {
         this.pool.clear();
     }
 
-    /** Показать прибавку над точкой в координатах поля. */
-    show(x: number, y: number, amount: number): void {
-        if (amount <= 0) {
+    /**
+     * Показать над точкой в координатах поля, чем обернулась поимка.
+     *
+     * `amount` — уже начисленное, вместе с множителем: считает его раунд, а
+     * показывает эта надпись, и второго места, где очки умножаются, в игре нет.
+     */
+    show(x: number, y: number, amount: number, item: FallingItemConfig): void {
+        const shown = describe(amount, item);
+        if (shown === null) {
             return;
         }
         const node = this.take();
         node.parent = this.node;
         node.setPosition(x, y);
         const label = node.getComponent(Label)!;
-        label.string = `+${amount}`;
-        label.color = new Color(255, 255, 255, 255);
-        this.living.push({ node, label, startY: y, age: 0 });
+        label.string = shown.text;
+        label.color = shown.color;
+        this.living.push({ node, label, color: shown.color, startY: y, age: 0 });
     }
 
     /** Все надписи разом убираются вместе с полем — на конце раунда. */
@@ -78,7 +100,8 @@ export class ScorePopups extends Component {
             // Гаснет во второй половине жизни: в первой надпись должна успеть
             // прочитаться, а не растаять на глазах.
             const fade = Math.max(0, (progress - 0.5) * 2);
-            popup.label.color = new Color(255, 255, 255, Math.round(255 * (1 - fade)));
+            const color = popup.color;
+            popup.label.color = new Color(color.r, color.g, color.b, Math.round(255 * (1 - fade)));
         }
     }
 
@@ -99,4 +122,21 @@ export class ScorePopups extends Component {
         label.outlineWidth = 3;
         return node;
     }
+}
+
+/**
+ * Что игрок увидит над предметом.
+ *
+ * Читается из данных предмета, а не из его имени: отнял жизнь — пустое сердце,
+ * сбил серию — красные очки, добыча — белые. Появится второй опасный тип, и
+ * показывать его будет нечему учить.
+ */
+function describe(amount: number, item: FallingItemConfig): Shown | null {
+    if (item.lifeChange < 0) {
+        return { text: '♡', color: BAD };
+    }
+    if (amount <= 0) {
+        return null;
+    }
+    return { text: `+${amount}`, color: item.combo === 'grow' ? GOOD : BAD };
 }

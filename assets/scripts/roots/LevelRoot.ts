@@ -266,7 +266,7 @@ export class LevelRoot extends Component {
                 if (!session.running) {
                     break;
                 }
-                this.popups.show(item.node.position.x, item.node.position.y, awarded);
+                this.popups.show(item.node.position.x, item.node.position.y, awarded, item.config);
                 this.spawner.recycle(item);
             } else if (verdict === 'missed') {
                 session.applyMiss(item.config);
