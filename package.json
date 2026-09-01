@@ -7,7 +7,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --skipLibCheck",
     "check-scene": "node tools/check-scene.js",
-    "check": "npm run typecheck && npm run check-scene"
+    "check": "npm run typecheck && npm run check-scene",
+    "pages": "node tools/prepare-pages.js"
   },
   "devDependencies": {
     "typescript": "~5.8.2"
