@@ -16,7 +16,7 @@ import { JsonConfigSource } from '../platform/config/JsonConfigSource';
 import { ComboLabel } from '../ui/core/ComboLabel';
 import { LivesView } from '../ui/core/LivesView';
 import { PauseButton } from '../ui/core/PauseButton';
-import { PauseOverlay } from '../ui/core/PauseOverlay';
+import { PausePanel } from '../ui/core/panels/PausePanel';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { ScorePopups } from '../ui/core/ScorePopups';
 import { TimerLabel } from '../ui/core/TimerLabel';
@@ -105,8 +105,8 @@ export class LevelRoot extends Component {
     @property(PauseButton)
     pauseButton: PauseButton = null!;
 
-    @property(PauseOverlay)
-    pauseOverlay: PauseOverlay = null!;
+    @property(PausePanel)
+    pausePanel: PausePanel = null!;
 
     /**
      * Раунд заводится вместе с компонентом, а не с первым `play`.
@@ -127,6 +127,14 @@ export class LevelRoot extends Component {
     }
 
     /**
+     * Игрок бросил раунд из паузы. Что это значит — вернуть меню, обнулить
+     * показатели — решает мета: раунд про меню не знает.
+     */
+    get exitClicked(): Subscribable<void> {
+        return this.pausePanel.exitClicked;
+    }
+
+    /**
      * Связывание живёт в `start`, а не в `onLoad`: к этому моменту `onLoad`
      * у всех соседей уже отработал, и спрашивать их можно, ничего не угадывая.
      */
@@ -144,9 +152,9 @@ export class LevelRoot extends Component {
         this.comboLabel.bind(session);
         this.timerLabel.bind(session);
         this.livesView.bind(session);
-        this.pauseButton.bind(session);
-        this.pauseOverlay.bind(session);
-        this.subs.add(this.pauseButton.clicked, () => session.togglePause());
+        this.pausePanel.bind(session);
+        this.subs.add(this.pauseButton.clicked, () => session.pause());
+        this.subs.add(this.pausePanel.resumeClicked, () => session.resume());
         this.subs.add(session.stateChanged, state => {
             // Показатели и корзина живут ровно столько, сколько идёт раунд:
             // в покое на экране меню, а корзине под кнопками делать нечего.

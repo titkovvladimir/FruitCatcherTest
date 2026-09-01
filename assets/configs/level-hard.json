@@ -2,10 +2,7 @@
   "duration": 75,
   "lives": 2,
   "fallTempo": 1.25,
-  "combo": {
-    "step": 7,
-    "max": 4
-  },
+  "comboMax": 12,
   "spawn": {
     "minInterval": 0.3,
     "maxInterval": 0.6

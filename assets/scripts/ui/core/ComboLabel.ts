@@ -8,9 +8,9 @@ const { ccclass, property } = _decorator;
 /**
  * Серия без ошибок — строкой под счётом.
  *
- * Пока серии нет, строка пустая: «серия 0» занимала бы место и сообщала бы
- * ровно ничего. Множитель показывается только когда он больше единицы — до
- * первой ступени игроку важна длина серии, а не то, что очки идут как обычно.
+ * Показывается, только когда множитель что-то даёт. «×1» — это обычная цена,
+ * и сообщать о ней нечего: строка на экране должна значить прибавку, иначе
+ * игрок перестанет на неё смотреть.
  */
 @ccclass('ComboLabel')
 export class ComboLabel extends Component {
@@ -29,10 +29,6 @@ export class ComboLabel extends Component {
     }
 
     private render(combo: ComboState): void {
-        if (combo.streak === 0) {
-            this.label.string = '';
-            return;
-        }
-        this.label.string = combo.multiplier > 1 ? `серия ${combo.streak} · ×${combo.multiplier}` : `серия ${combo.streak}`;
+        this.label.string = combo.multiplier > 1 ? `×${combo.multiplier}` : '';
     }
 }

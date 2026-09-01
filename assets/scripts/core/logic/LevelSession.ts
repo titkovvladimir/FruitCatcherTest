@@ -21,7 +21,7 @@ export class LevelSession {
     private _maxLives = 0;
     private _timeLeft = 0;
     private _streak = 0;
-    private _combo: LevelConfig['combo'] = { step: 1, max: 1 };
+    private _comboMax = 1;
 
     private readonly _scoreChanged = new Signal<number>('scoreChanged');
     private readonly _lifeLost = new Signal<number>('lifeLost');
@@ -107,7 +107,7 @@ export class LevelSession {
         this._maxLives = config.lives;
         this._timeLeft = config.duration;
         this._streak = 0;
-        this._combo = config.combo;
+        this._comboMax = config.comboMax;
         this.setState('running');
         this._scoreChanged.emit(this._score);
         this._timeChanged.emit(this.secondsLeft);
@@ -145,19 +145,6 @@ export class LevelSession {
         }
     }
 
-    /**
-     * Пауза и снятие с паузы — одно действие игрока: та же кнопка, то же место
-     * экрана. Знание «что делает нажатие» живёт здесь, а не в сборщике: там оно
-     * было бы правилом игры в файле, где правил быть не должно.
-     */
-    togglePause(): void {
-        if (this._state === 'running') {
-            this.pause();
-        } else {
-            this.resume();
-        }
-    }
-
     tick(dt: number): void {
         if (this._state !== 'running') {
             return;
@@ -175,23 +162,22 @@ export class LevelSession {
     /**
      * Предмет пойман; отдаёт начисленные очки — их показывает всплывашка.
      *
-     * Про яблоки и мухоморы раунд по-прежнему не знает: чем предмет
-     * оказывается игроку, написано в его роли, а сколько это стоит — в его
-     * числах. Множитель серии идёт только на добычу: умножать им же очки за
-     * ловушку, которая эту серию и оборвала, было бы издевательством.
+     * Про яблоки и мухоморы раунд по-прежнему не знает: что предмет делает с
+     * серией, написано у него в поле `combo`, а сколько он стоит — в числах.
+     * Множитель идёт только на добычу: умножать им очки за то, что серию
+     * укоротило, было бы издевательством.
      */
     applyCatch(item: FallingItemConfig): number {
         if (this._state !== 'running') {
             return 0;
         }
         this._caught += 1;
-        if (item.role === 'prize') {
-            this._streak += 1;
-            this._comboChanged.emit(this.combo);
-        } else {
-            this.breakStreak();
-        }
-        const awarded = item.role === 'prize' ? item.score * this.multiplier : item.score;
+        // Серия меняется до начисления: пойманный фрукт множит очки уже своим
+        // номером в серии, а не предыдущим. Иначе второй подряд шёл бы по
+        // одинарной цене, и обещание «каждый фрукт прибавляет множитель»
+        // выполнялось бы с опозданием на один.
+        this.changeStreak(item.combo);
+        const awarded = item.combo === 'grow' ? item.score * this.multiplier : item.score;
         if (awarded !== 0) {
             this._score += awarded;
             this._scoreChanged.emit(this._score);
@@ -211,28 +197,43 @@ export class LevelSession {
      * обрывает серию: без этого промах не стоит ничего, а игра сводится к
      * «води корзину под всё подряд».
      *
-     * Упущенная ловушка не стоит ничего — игрок поступил правильно.
+     * Упущенное кислое и упущенный мухомор не стоят ничего — игрок поступил
+     * правильно.
      */
     applyMiss(item: FallingItemConfig): void {
         if (this._state !== 'running') {
             return;
         }
         this._missed += 1;
-        if (item.role === 'prize') {
-            this.breakStreak();
+        if (item.combo === 'grow') {
+            this.setStreak(0);
         }
     }
 
-    /** Во сколько раз серия увеличивает очки за добычу. */
+    /**
+     * Множитель равен длине серии: два подряд — вдвое, три — втрое. Серия выше
+     * потолка не растёт, поэтому множитель и серия — одно и то же число, и
+     * укоротить его кислым видно сразу.
+     */
     private get multiplier(): number {
-        return Math.min(1 + Math.floor(this._streak / this._combo.step), this._combo.max);
+        return Math.max(1, this._streak);
     }
 
-    private breakStreak(): void {
-        if (this._streak === 0) {
+    private changeStreak(effect: FallingItemConfig['combo']): void {
+        if (effect === 'grow') {
+            this.setStreak(Math.min(this._streak + 1, this._comboMax));
+        } else if (effect === 'drop') {
+            this.setStreak(Math.max(0, this._streak - 1));
+        } else {
+            this.setStreak(0);
+        }
+    }
+
+    private setStreak(value: number): void {
+        if (this._streak === value) {
             return;
         }
-        this._streak = 0;
+        this._streak = value;
         this._comboChanged.emit(this.combo);
     }
 

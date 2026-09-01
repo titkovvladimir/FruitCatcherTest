@@ -487,11 +487,11 @@ assets/scripts/
     core/ScoreLabel.ts
     core/ComboLabel.ts                 серия и множитель под счётом
     core/ScorePopups.ts                всплывающее «+40» над пойманным
-    core/ExitButton.ts                 бросить раунд и вернуться к выбору
     core/TimerLabel.ts
     core/LivesView.ts
     core/ScorePopup.ts                 всплывающее «+500» над пойманным
     core/PauseButton.ts
+    core/panels/PausePanel.ts          продолжить или выйти к сложностям
     core/panels/LevelResultPanel.ts
     meta/DifficultyButton.ts           три штуки на сцене, у каждой свой уровень
   roots/
@@ -523,7 +523,8 @@ Game
 │  │  ├─ LevelHud                      контейнер, гаснет вне раунда
 │  │  │  ├─ Score / Combo / Timer      Label в каждом
 │  │  │  ├─ Lives                      Label: ♥ за жизнь, ♡ за потраченную
-│  │  │  └─ PauseButton / ExitButton
+│  │  │  └─ PauseButton
+│  │  ├─ Panels/PausePanel             Dimmer, «Пауза», Продолжить, Выйти
 │  │  └─ Panels/LevelResultPanel       Dimmer, итог, рекорд сложности,
 │  │                                   RestartButton, MenuButton
 │  └─ Meta
@@ -554,6 +555,7 @@ Game
 | | `stateChanged` | `LevelState` |
 | | `finished` | `LevelOutcome` |
 | `BestScores` | `changed` | сложность и новый рекорд |
+| `PausePanel` | `resumeClicked`, `exitClicked` | — |
 | `PauseButton`, `DifficultyButton` | `clicked` | у кнопки сложности — какая |
 | `LevelResultPanel` | `restartClicked`, `menuClicked` | — |
 

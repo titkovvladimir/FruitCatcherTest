@@ -1,7 +1,7 @@
 [
   {
     "id": "raspberry",
-    "role": "prize",
+    "combo": "grow",
     "texture": "raspberry",
     "radius": 22,
     "score": 30,
@@ -14,7 +14,7 @@
   },
   {
     "id": "black-berry-dark",
-    "role": "prize",
+    "combo": "grow",
     "texture": "black-berry-dark",
     "radius": 22,
     "score": 30,
@@ -27,7 +27,7 @@
   },
   {
     "id": "black-berry-light",
-    "role": "prize",
+    "combo": "grow",
     "texture": "black-berry-light",
     "radius": 22,
     "score": 40,
@@ -42,7 +42,7 @@
   },
   {
     "id": "red-cherry",
-    "role": "prize",
+    "combo": "grow",
     "texture": "red-cherry",
     "radius": 24,
     "score": 40,
@@ -57,7 +57,7 @@
   },
   {
     "id": "black-cherry",
-    "role": "prize",
+    "combo": "grow",
     "texture": "black-cherry",
     "radius": 24,
     "score": 30,
@@ -70,7 +70,7 @@
   },
   {
     "id": "strawberry",
-    "role": "prize",
+    "combo": "grow",
     "texture": "strawberry",
     "radius": 28,
     "score": 20,
@@ -83,7 +83,7 @@
   },
   {
     "id": "plum",
-    "role": "prize",
+    "combo": "grow",
     "texture": "plum",
     "radius": 30,
     "score": 20,
@@ -96,7 +96,7 @@
   },
   {
     "id": "green-grape",
-    "role": "prize",
+    "combo": "grow",
     "texture": "green-grape",
     "radius": 32,
     "score": 20,
@@ -109,7 +109,7 @@
   },
   {
     "id": "red-grape",
-    "role": "prize",
+    "combo": "grow",
     "texture": "red-grape",
     "radius": 32,
     "score": 25,
@@ -123,7 +123,7 @@
   },
   {
     "id": "star-fruit",
-    "role": "prize",
+    "combo": "grow",
     "texture": "star-fruit",
     "radius": 34,
     "score": 30,
@@ -138,7 +138,7 @@
   },
   {
     "id": "pear",
-    "role": "prize",
+    "combo": "grow",
     "texture": "pear",
     "radius": 34,
     "score": 20,
@@ -151,7 +151,7 @@
   },
   {
     "id": "peach",
-    "role": "prize",
+    "combo": "grow",
     "texture": "peach",
     "radius": 36,
     "score": 20,
@@ -164,7 +164,7 @@
   },
   {
     "id": "orange",
-    "role": "prize",
+    "combo": "grow",
     "texture": "orange",
     "radius": 38,
     "score": 20,
@@ -177,7 +177,7 @@
   },
   {
     "id": "green-apple",
-    "role": "prize",
+    "combo": "grow",
     "texture": "green-apple",
     "radius": 40,
     "score": 20,
@@ -190,7 +190,7 @@
   },
   {
     "id": "red-apple",
-    "role": "prize",
+    "combo": "grow",
     "texture": "red-apple",
     "radius": 40,
     "score": 20,
@@ -203,7 +203,7 @@
   },
   {
     "id": "coconut",
-    "role": "prize",
+    "combo": "grow",
     "texture": "coconut",
     "radius": 44,
     "score": 15,
@@ -217,7 +217,7 @@
   },
   {
     "id": "banana",
-    "role": "prize",
+    "combo": "grow",
     "texture": "banana",
     "radius": 46,
     "score": 20,
@@ -232,7 +232,7 @@
   },
   {
     "id": "watermelon",
-    "role": "prize",
+    "combo": "grow",
     "texture": "watermelon",
     "radius": 60,
     "score": 15,
@@ -246,7 +246,7 @@
   },
   {
     "id": "lemon",
-    "role": "trap",
+    "combo": "drop",
     "texture": "lemon",
     "radius": 34,
     "score": 15,
@@ -259,7 +259,7 @@
   },
   {
     "id": "lime",
-    "role": "trap",
+    "combo": "drop",
     "texture": "lime",
     "radius": 30,
     "score": 15,
@@ -272,7 +272,7 @@
   },
   {
     "id": "mushroom",
-    "role": "trap",
+    "combo": "reset",
     "texture": "mushroom",
     "radius": 44,
     "score": 0,
