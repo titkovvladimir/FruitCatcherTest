@@ -88,6 +88,7 @@ npm run pages
 | [docs/DECISIONS.md](docs/DECISIONS.md) | принятые решения и причины |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | слои, зависимости, события |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | открытые пункты и отложенное |
+| [docs/DONE.md](docs/DONE.md) | закрытые пункты: чем закрылись и какой ценой |
 
 ## Структура проекта
 
