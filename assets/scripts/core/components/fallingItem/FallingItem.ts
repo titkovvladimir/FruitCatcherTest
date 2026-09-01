@@ -61,7 +61,12 @@ export class FallingItem extends Component {
         this.age = 0;
         this.previousY = y;
 
-        this.transform.setContentSize(config.radius * 2, config.radius * 2);
+        // Ширину задаёт радиус — то самое число, по которому разбирается
+        // ловля. Высота идёт за пропорцией картинки: в квадрате груша и банан
+        // выглядели бы раздавленными, а к ловле высота отношения не имеет.
+        const original = frame.originalSize;
+        const aspect = original.width > 0 ? original.height / original.width : 1;
+        this.transform.setContentSize(config.radius * 2, config.radius * 2 * aspect);
         this.sprite.spriteFrame = frame;
         this.node.setPosition(x, y);
     }

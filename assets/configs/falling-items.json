@@ -1,13 +1,69 @@
 [
   {
-    "id": "red-apple",
+    "id": "raspberry",
     "role": "prize",
-    "texture": "red-apple",
-    "radius": 40,
-    "score": 10,
+    "texture": "raspberry",
+    "radius": 22,
+    "score": 30,
     "lifeChange": 0,
-    "weight": 30,
-    "speed": 240,
+    "weight": 5,
+    "speed": 300,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "black-berry-dark",
+    "role": "prize",
+    "texture": "black-berry-dark",
+    "radius": 22,
+    "score": 30,
+    "lifeChange": 0,
+    "weight": 5,
+    "speed": 290,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "black-berry-light",
+    "role": "prize",
+    "texture": "black-berry-light",
+    "radius": 22,
+    "score": 40,
+    "lifeChange": 0,
+    "weight": 5,
+    "speed": 280,
+    "fall": {
+      "kind": "zigzag",
+      "amplitude": 60,
+      "period": 1.4
+    }
+  },
+  {
+    "id": "red-cherry",
+    "role": "prize",
+    "texture": "red-cherry",
+    "radius": 24,
+    "score": 40,
+    "lifeChange": 0,
+    "weight": 5,
+    "speed": 280,
+    "fall": {
+      "kind": "zigzag",
+      "amplitude": 70,
+      "period": 1.5
+    }
+  },
+  {
+    "id": "black-cherry",
+    "role": "prize",
+    "texture": "black-cherry",
+    "radius": 24,
+    "score": 30,
+    "lifeChange": 0,
+    "weight": 5,
+    "speed": 300,
     "fall": {
       "kind": "uniform"
     }
@@ -16,13 +72,147 @@
     "id": "strawberry",
     "role": "prize",
     "texture": "strawberry",
-    "radius": 30,
-    "score": 25,
+    "radius": 28,
+    "score": 20,
     "lifeChange": 0,
-    "weight": 15,
+    "weight": 6,
     "speed": 320,
     "fall": {
       "kind": "uniform"
+    }
+  },
+  {
+    "id": "plum",
+    "role": "prize",
+    "texture": "plum",
+    "radius": 30,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 8,
+    "speed": 270,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "green-grape",
+    "role": "prize",
+    "texture": "green-grape",
+    "radius": 32,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 7,
+    "speed": 260,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "red-grape",
+    "role": "prize",
+    "texture": "red-grape",
+    "radius": 32,
+    "score": 25,
+    "lifeChange": 0,
+    "weight": 7,
+    "speed": 150,
+    "fall": {
+      "kind": "accelerated",
+      "acceleration": 200
+    }
+  },
+  {
+    "id": "star-fruit",
+    "role": "prize",
+    "texture": "star-fruit",
+    "radius": 34,
+    "score": 30,
+    "lifeChange": 0,
+    "weight": 4,
+    "speed": 240,
+    "fall": {
+      "kind": "zigzag",
+      "amplitude": 80,
+      "period": 1.8
+    }
+  },
+  {
+    "id": "pear",
+    "role": "prize",
+    "texture": "pear",
+    "radius": 34,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 8,
+    "speed": 250,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "peach",
+    "role": "prize",
+    "texture": "peach",
+    "radius": 36,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 8,
+    "speed": 250,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "orange",
+    "role": "prize",
+    "texture": "orange",
+    "radius": 38,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 8,
+    "speed": 245,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "green-apple",
+    "role": "prize",
+    "texture": "green-apple",
+    "radius": 40,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 12,
+    "speed": 240,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "red-apple",
+    "role": "prize",
+    "texture": "red-apple",
+    "radius": 40,
+    "score": 20,
+    "lifeChange": 0,
+    "weight": 12,
+    "speed": 240,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "coconut",
+    "role": "prize",
+    "texture": "coconut",
+    "radius": 44,
+    "score": 15,
+    "lifeChange": 0,
+    "weight": 4,
+    "speed": 130,
+    "fall": {
+      "kind": "accelerated",
+      "acceleration": 240
     }
   },
   {
@@ -32,7 +222,7 @@
     "radius": 46,
     "score": 20,
     "lifeChange": 0,
-    "weight": 20,
+    "weight": 6,
     "speed": 230,
     "fall": {
       "kind": "zigzag",
@@ -45,13 +235,39 @@
     "role": "prize",
     "texture": "watermelon",
     "radius": 60,
-    "score": 30,
+    "score": 15,
     "lifeChange": 0,
-    "weight": 10,
+    "weight": 4,
     "speed": 120,
     "fall": {
       "kind": "accelerated",
       "acceleration": 220
+    }
+  },
+  {
+    "id": "lemon",
+    "role": "trap",
+    "texture": "lemon",
+    "radius": 34,
+    "score": 15,
+    "lifeChange": 0,
+    "weight": 6,
+    "speed": 255,
+    "fall": {
+      "kind": "uniform"
+    }
+  },
+  {
+    "id": "lime",
+    "role": "trap",
+    "texture": "lime",
+    "radius": 30,
+    "score": 15,
+    "lifeChange": 0,
+    "weight": 6,
+    "speed": 265,
+    "fall": {
+      "kind": "uniform"
     }
   },
   {
@@ -61,7 +277,7 @@
     "radius": 44,
     "score": 0,
     "lifeChange": -1,
-    "weight": 12,
+    "weight": 10,
     "speed": 260,
     "fall": {
       "kind": "uniform"
