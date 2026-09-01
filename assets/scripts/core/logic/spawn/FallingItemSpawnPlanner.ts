@@ -25,11 +25,14 @@ export interface SpawnOrder {
 export class FallingItemSpawnPlanner {
     private readonly totalWeight: number;
     private timeToNext = 0;
+    private lastPrize: number | null = null;
 
     constructor(
         private readonly items: readonly FallingItemConfig[],
         private readonly plan: SpawnPlan,
         private readonly random: RandomSource,
+        /** Насколько мухомор тянет к месту последней добычи; 0 — не тянет. */
+        private readonly dangerProximity = 0,
     ) {
         if (items.length === 0) {
             throw new Error('FallingItemSpawnPlanner: таблица типов пуста, появляться нечему');
@@ -44,6 +47,7 @@ export class FallingItemSpawnPlanner {
     /** Начало раунда: отсчёт до первого предмета начинается заново. */
     reset(): void {
         this.timeToNext = this.nextInterval();
+        this.lastPrize = null;
     }
 
     tick(dt: number): SpawnOrder | null {
@@ -52,7 +56,31 @@ export class FallingItemSpawnPlanner {
             return null;
         }
         this.timeToNext += this.nextInterval();
-        return { item: this.pickItem(), position: this.random.next() };
+        const item = this.pickItem();
+        return { item, position: this.positionFor(item) };
+    }
+
+    /**
+     * Где предмет выйдет по ширине полосы.
+     *
+     * Добыча выходит где придётся и запоминает своё место. То, что обнуляет
+     * серию, тянется к этому месту тем сильнее, чем выше близость уровня: на
+     * лёгкой мухомор почти независим, на тяжёлой выходит почти оттуда же, где
+     * только что вышел фрукт, — и взять фрукт, не задев мухомор, становится
+     * отдельной задачей.
+     */
+    private positionFor(item: FallingItemConfig): number {
+        const position = this.random.next();
+        if (item.combo !== 'reset') {
+            if (item.combo === 'grow') {
+                this.lastPrize = position;
+            }
+            return position;
+        }
+        if (this.lastPrize === null || this.dangerProximity === 0) {
+            return position;
+        }
+        return position + (this.lastPrize - position) * this.dangerProximity;
     }
 
     private nextInterval(): number {

@@ -3,6 +3,7 @@
   "lives": 5,
   "fallTempo": 0.85,
   "comboMax": 5,
+  "dangerProximity": 0.15,
   "spawn": {
     "minInterval": 0.7,
     "maxInterval": 1.4

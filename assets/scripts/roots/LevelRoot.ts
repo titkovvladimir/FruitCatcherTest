@@ -199,7 +199,7 @@ export class LevelRoot extends Component {
         this.spawner.recycleAll();
         this.popups.recycleAll();
         this.behaviours = createFallBehaviours(this.items, level.fallTempo);
-        this.planner = new FallingItemSpawnPlanner(this.items, level.spawn, this.random);
+        this.planner = new FallingItemSpawnPlanner(this.items, level.spawn, this.random, level.dangerProximity);
         this.session.start(level);
     }
 
