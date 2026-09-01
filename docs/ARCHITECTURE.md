@@ -486,6 +486,8 @@ assets/scripts/
   ui/
     core/ScoreLabel.ts
     core/ComboLabel.ts                 серия и множитель под счётом
+    core/ScorePopups.ts                всплывающее «+40» над пойманным
+    core/ExitButton.ts                 бросить раунд и вернуться к выбору
     core/TimerLabel.ts
     core/LivesView.ts
     core/ScorePopup.ts                 всплывающее «+500» над пойманным
@@ -513,6 +515,7 @@ Game
 │  │  ├─ Background
 │  │  ├─ Field                         UITransform = игровая область
 │  │  │  ├─ FallingItems
+│  │  │  ├─ Popups                     всплывающие очки, поверх предметов
 │  │  │  └─ Basket
 │  │  │     ├─ BucketBack
 │  │  │     ├─ Mouth                   UITransform = линия и ширина проёма
@@ -520,7 +523,7 @@ Game
 │  │  ├─ LevelHud                      контейнер, гаснет вне раунда
 │  │  │  ├─ Score / Combo / Timer      Label в каждом
 │  │  │  ├─ Lives                      Label: ♥ за жизнь, ♡ за потраченную
-│  │  │  └─ PauseButton
+│  │  │  └─ PauseButton / ExitButton
 │  │  └─ Panels/LevelResultPanel       Dimmer, итог, рекорд сложности,
 │  │                                   RestartButton, MenuButton
 │  └─ Meta

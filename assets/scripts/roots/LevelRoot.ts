@@ -18,6 +18,7 @@ import { LivesView } from '../ui/core/LivesView';
 import { PauseButton } from '../ui/core/PauseButton';
 import { PauseOverlay } from '../ui/core/PauseOverlay';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
+import { ScorePopups } from '../ui/core/ScorePopups';
 import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
 import { Subscribable } from '../utils/Signal';
@@ -64,6 +65,10 @@ export class LevelRoot extends Component {
 
     @property(FallingItemSpawner)
     spawner: FallingItemSpawner = null!;
+
+    /** Всплывающие числа очков над пойманным. */
+    @property(ScorePopups)
+    popups: ScorePopups = null!;
 
     @property(Basket)
     basket: Basket = null!;
@@ -153,7 +158,10 @@ export class LevelRoot extends Component {
             // снятие паузы отправляет её туда, куда игрок не целился.
             this.basketControl.enabled = state === 'running';
         });
-        this.subs.add(session.finished, () => this.spawner.recycleAll());
+        this.subs.add(session.finished, () => {
+            this.spawner.recycleAll();
+            this.popups.recycleAll();
+        });
         // Вкладку свернули — раунд встаёт сам. Движок в это время не тикает
         // вовсе, так что доиграться без игрока раунд не может; пауза нужна для
         // возвращения: иначе игра оживает в ту же секунду, когда игрок ещё
@@ -181,6 +189,7 @@ export class LevelRoot extends Component {
      */
     play(level: LevelConfig): void {
         this.spawner.recycleAll();
+        this.popups.recycleAll();
         this.behaviours = createFallBehaviours(this.items, level.fallTempo);
         this.planner = new FallingItemSpawnPlanner(this.items, level.spawn, this.random);
         this.session.start(level);
@@ -240,13 +249,15 @@ export class LevelRoot extends Component {
             item.tick(step);
             const verdict = resolveCatch(item.motion, mouth, floor);
             if (verdict === 'caught') {
-                session.applyCatch(item.config);
+                const awarded = session.applyCatch(item.config);
                 // Пойманным мог оказаться последний мухомор: раунд кончился
-                // прямо здесь и убрал поле целиком. Возвращать в пул нечего, и
-                // следующий обход прочитал бы уже пустое место.
+                // прямо здесь и убрал поле целиком. Возвращать в пул нечего,
+                // следующий обход прочитал бы уже пустое место, а всплывашка
+                // повисла бы над панелью итога — тикать её больше некому.
                 if (!session.running) {
                     break;
                 }
+                this.popups.show(item.node.position.x, item.node.position.y, awarded);
                 this.spawner.recycle(item);
             } else if (verdict === 'missed') {
                 session.applyMiss(item.config);
@@ -254,6 +265,7 @@ export class LevelRoot extends Component {
             }
         }
 
+        this.popups.tick(step);
         this.basket.tick();
     }
 }

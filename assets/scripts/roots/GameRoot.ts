@@ -4,6 +4,7 @@ import { Difficulty } from '../meta/logic/Difficulty';
 import { LEVEL_DOCUMENTS, LevelCatalog, readLevels } from '../meta/logic/LevelCatalog';
 import { JsonConfigSource } from '../platform/config/JsonConfigSource';
 import { LocalStorage } from '../platform/storage/LocalStorage';
+import { ExitButton } from '../ui/core/ExitButton';
 import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { DifficultyButton } from '../ui/meta/DifficultyButton';
 import { SubscriptionBag } from '../utils/SubscriptionBag';
@@ -46,6 +47,10 @@ export class GameRoot extends Component {
 
     @property(LevelResultPanel)
     resultPanel: LevelResultPanel = null!;
+
+    /** Выход из раунда: бросить начатое и вернуться к выбору. */
+    @property(ExitButton)
+    exitButton: ExitButton = null!;
 
     /** Настройки уровней: длина раунда, жизни, темп падения, густота спавна. */
     @property(JsonAsset)
@@ -90,6 +95,7 @@ export class GameRoot extends Component {
         this.subs.add(this.best.changed, () => this.showRecords());
         this.subs.add(this.resultPanel.restartClicked, () => this.replay());
         this.subs.add(this.resultPanel.menuClicked, () => this.showMenu());
+        this.subs.add(this.exitButton.clicked, () => this.showMenu());
         this.showRecords();
         this.showMenu();
     }
