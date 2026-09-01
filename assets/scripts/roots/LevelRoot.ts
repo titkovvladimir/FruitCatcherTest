@@ -6,7 +6,6 @@ import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSp
 import { resolveCatch } from '../core/logic/catch/CatchResolver';
 import { readBasket } from '../core/logic/config/BasketConfig';
 import { readFallingItems } from '../core/logic/config/FallingItemConfig';
-import { LevelConfig } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
@@ -23,6 +22,19 @@ import { MathRandomSource } from '../utils/random/MathRandomSource';
 import { SubscriptionBag } from '../utils/SubscriptionBag';
 
 const { ccclass, property } = _decorator;
+
+/**
+ * Потолок шага времени, секунд.
+ *
+ * Вкладку свернули, ноутбук уснул, кадр залип — между кадрами набежит сколько
+ * угодно. Без потолка предметы за один кадр перепрыгнули бы поле целиком, а
+ * таймер отсчитал бы полраунда.
+ *
+ * Константа, а не настройка уровня: это предохранитель тика, и разным на
+ * разных сложностях он быть не может. В конфиге он был бы третьей копией
+ * одного числа, которую кто-то однажды поправит не везде.
+ */
+const MAX_STEP = 0.1;
 
 /**
  * Сборка уровня: связывает правила раунда с тем, что видно на экране, и ведёт
@@ -94,7 +106,6 @@ export class LevelRoot extends Component {
     @property(LevelResultPanel)
     resultPanel: LevelResultPanel = null!;
 
-    private level: LevelConfig | null = null;
     private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
     private behaviours = new Map<string, FallBehaviour>();
@@ -113,12 +124,12 @@ export class LevelRoot extends Component {
             normal: this.normalLevelConfig.json,
             hard: this.hardLevelConfig.json,
         });
-        this.level = levels[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
-        this.behaviours = createFallBehaviours(items, this.level.fallTempo);
-        this.planner = new FallingItemSpawnPlanner(items, this.level.spawn, new MathRandomSource());
+        const level = levels[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
+        this.behaviours = createFallBehaviours(items, level.fallTempo);
+        this.planner = new FallingItemSpawnPlanner(items, level.spawn, new MathRandomSource());
         this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));
 
-        const session = new LevelSession(this.level);
+        const session = new LevelSession(level);
         this.session = session;
         // Виджеты связываются до старта раунда: иначе первый счёт и первая
         // секунда прошли бы мимо них, а снимок они возьмут уже обнулённый.
@@ -181,14 +192,13 @@ export class LevelRoot extends Component {
      * той корзиной, которая стояла на месте, когда кадр начинался.
      */
     update(dt: number): void {
-        const level = this.level;
         const planner = this.planner;
         const session = this.session;
-        if (level === null || planner === null || session === null) {
+        if (planner === null || session === null) {
             return;
         }
 
-        const step = Math.min(dt, level.maxStep);
+        const step = Math.min(dt, MAX_STEP);
         session.tick(step);
         // Раунд не идёт — не идёт ничего: ни появление, ни падение, ни корзина.
         // Иначе пауза останавливала бы только таймер, а поле продолжало жить.

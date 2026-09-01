@@ -58,7 +58,7 @@ Box2D рассматривался ради сочной ловли — отск
 
 ```
 LevelRoot.update(dt):
-    dt = min(dt, maxStep)      кламп от лага и свёрнутой вкладки; maxStep из конфига
+    dt = min(dt, MAX_STEP)     кламп от лага и свёрнутой вкладки; предохранитель тика
     session.tick(dt)           таймер раунда
     planner.tick(dt)           заказ на спавн, если пора
     предметы.tick(dt)          age += dt; позиция = спавн + offsetAt(age)

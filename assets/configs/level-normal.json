@@ -2,7 +2,6 @@
   "duration": 60,
   "lives": 3,
   "fallTempo": 1,
-  "maxStep": 0.1,
   "spawn": {
     "minInterval": 0.45,
     "maxInterval": 0.9
