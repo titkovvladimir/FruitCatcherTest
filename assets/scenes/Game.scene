@@ -3789,7 +3789,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 220,
+      "y": 265,
       "z": 0
     },
     "_lrot": {
@@ -3912,7 +3912,7 @@
     "_top": 0,
     "_bottom": 0,
     "_horizontalCenter": 0,
-    "_verticalCenter": 220,
+    "_verticalCenter": 265,
     "_isAbsLeft": true,
     "_isAbsRight": true,
     "_isAbsTop": true,
@@ -3949,7 +3949,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 148,
+      "y": 140,
       "z": 0
     },
     "_lrot": {
@@ -3985,8 +3985,8 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 800,
-      "height": 44
+      "width": 1000,
+      "height": 128
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4014,14 +4014,14 @@
       "b": 255,
       "a": 255
     },
-    "_string": "Ведите корзину мышью. Мухомор отнимает жизнь.",
+    "_string": "Ведите корзину мышью и ловите фрукты.\nПойманные подряд множат очки: два подряд — вдвое, три — втрое.\nПромах сбрасывает множитель, кислое снимает единицу.\nМухомор сбрасывает множитель и отнимает жизнь.",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 28,
-    "_fontSize": 28,
+    "_actualFontSize": 24,
+    "_fontSize": 24,
     "_fontFamily": "Arial",
-    "_lineHeight": 36,
-    "_overflow": 2,
+    "_lineHeight": 32,
+    "_overflow": 0,
     "_enableWrapText": false,
     "_font": null,
     "_isSystemFontUsed": true,
@@ -4072,7 +4072,7 @@
     "_top": 0,
     "_bottom": 0,
     "_horizontalCenter": 0,
-    "_verticalCenter": 148,
+    "_verticalCenter": 140,
     "_isAbsLeft": true,
     "_isAbsRight": true,
     "_isAbsTop": true,
@@ -4122,7 +4122,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 20,
+      "y": 10,
       "z": 0
     },
     "_lrot": {
@@ -4222,7 +4222,7 @@
     "_top": 0,
     "_bottom": 0,
     "_horizontalCenter": 0,
-    "_verticalCenter": 20,
+    "_verticalCenter": 10,
     "_isAbsLeft": true,
     "_isAbsRight": true,
     "_isAbsTop": true,
@@ -4501,7 +4501,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -90,
+      "y": -100,
       "z": 0
     },
     "_lrot": {
@@ -4601,7 +4601,7 @@
     "_top": 0,
     "_bottom": 0,
     "_horizontalCenter": 0,
-    "_verticalCenter": -90,
+    "_verticalCenter": -100,
     "_isAbsLeft": true,
     "_isAbsRight": true,
     "_isAbsTop": true,
@@ -4880,7 +4880,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -200,
+      "y": -210,
       "z": 0
     },
     "_lrot": {
@@ -4980,7 +4980,7 @@
     "_top": 0,
     "_bottom": 0,
     "_horizontalCenter": 0,
-    "_verticalCenter": -200,
+    "_verticalCenter": -210,
     "_isAbsLeft": true,
     "_isAbsRight": true,
     "_isAbsTop": true,
