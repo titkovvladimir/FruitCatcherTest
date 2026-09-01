@@ -2,13 +2,16 @@ import { _decorator, Component, JsonAsset } from 'cc';
 import { Basket } from '../core/components/basket/Basket';
 import { Field } from '../core/components/Field';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
+import { resolveCatch } from '../core/logic/catch/CatchResolver';
 import { readBasket } from '../core/logic/config/BasketConfig';
 import { readFallingItems } from '../core/logic/config/FallingItemConfig';
 import { LevelConfig, readLevel } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
+import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
+import { SubscriptionBag } from '../utils/SubscriptionBag';
 
 const { ccclass, property } = _decorator;
 
@@ -43,8 +46,10 @@ export class LevelRoot extends Component {
     basketConfig: JsonAsset = null!;
 
     private level: LevelConfig | null = null;
+    private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
     private behaviours = new Map<string, FallBehaviour>();
+    private readonly subs = new SubscriptionBag();
 
     /**
      * Связывание живёт в `start`, а не в `onLoad`: к этому моменту `onLoad`
@@ -56,34 +61,57 @@ export class LevelRoot extends Component {
         this.behaviours = createFallBehaviours(items);
         this.planner = new FallingItemSpawnPlanner(items, this.level.spawn, new MathRandomSource());
         this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));
+
+        const session = new LevelSession(this.level);
+        this.session = session;
+        this.subs.add(session.finished, () => this.spawner.recycleAll());
+        session.start();
+    }
+
+    onDestroy(): void {
+        this.subs.clear();
     }
 
     /**
-     * Порядок в тике задан явно: заказ на появление, движение предметов,
-     * уборка улетевших, ход корзины.
+     * Порядок в тике задан явно: время раунда, заказ на появление, движение
+     * предметов и разбор ловли, ход корзины.
+     *
+     * Проём берётся до хода корзины: отрезок предмета за этот кадр сверяется с
+     * той корзиной, которая стояла на месте, когда кадр начинался.
      */
     update(dt: number): void {
         const level = this.level;
         const planner = this.planner;
-        if (level === null || planner === null) {
+        const session = this.session;
+        if (level === null || planner === null || session === null) {
             return;
         }
 
         const step = Math.min(dt, level.maxStep);
+        session.tick(step);
 
-        const order = planner.tick(step);
-        if (order !== null) {
-            const behaviour = this.behaviours.get(order.item.id);
-            if (behaviour !== undefined) {
-                this.spawner.spawn(order.item, behaviour, order.position);
+        if (session.running) {
+            const order = planner.tick(step);
+            if (order !== null) {
+                const behaviour = this.behaviours.get(order.item.id);
+                if (behaviour !== undefined) {
+                    this.spawner.spawn(order.item, behaviour, order.position);
+                }
             }
         }
 
+        const mouth = this.basket.mouthLine;
+        const floor = this.field.bottom;
         const items = this.spawner.items;
         for (let i = items.length - 1; i >= 0; i -= 1) {
             const item = items[i];
             item.tick(step);
-            if (item.node.position.y + item.config.radius < this.field.bottom) {
+            const verdict = resolveCatch(item.motion, mouth, floor);
+            if (verdict === 'caught') {
+                session.applyCatch(item.config.score, item.config.lifeChange);
+                this.spawner.recycle(item);
+            } else if (verdict === 'missed') {
+                session.applyMiss();
                 this.spawner.recycle(item);
             }
         }
