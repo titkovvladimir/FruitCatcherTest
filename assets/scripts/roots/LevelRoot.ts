@@ -170,6 +170,12 @@ export class LevelRoot extends Component {
             const verdict = resolveCatch(item.motion, mouth, floor);
             if (verdict === 'caught') {
                 session.applyCatch(item.config.score, item.config.lifeChange);
+                // Пойманным мог оказаться последний мухомор: раунд кончился
+                // прямо здесь и убрал поле целиком. Возвращать в пул нечего, и
+                // следующий обход прочитал бы уже пустое место.
+                if (!session.running) {
+                    break;
+                }
                 this.spawner.recycle(item);
             } else if (verdict === 'missed') {
                 session.applyMiss();
