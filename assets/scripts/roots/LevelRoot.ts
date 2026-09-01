@@ -1,4 +1,4 @@
-import { _decorator, Component, JsonAsset } from 'cc';
+import { _decorator, Component, Game, game, JsonAsset } from 'cc';
 import { Basket } from '../core/components/basket/Basket';
 import { Field } from '../core/components/Field';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
@@ -11,6 +11,7 @@ import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
 import { LivesView } from '../ui/core/LivesView';
+import { PauseButton } from '../ui/core/PauseButton';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
@@ -57,6 +58,9 @@ export class LevelRoot extends Component {
     @property(LivesView)
     livesView: LivesView = null!;
 
+    @property(PauseButton)
+    pauseButton: PauseButton = null!;
+
     private level: LevelConfig | null = null;
     private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
@@ -81,12 +85,26 @@ export class LevelRoot extends Component {
         this.scoreLabel.bind(session);
         this.timerLabel.bind(session);
         this.livesView.bind(session);
+        this.pauseButton.bind(session);
+        this.subs.add(this.pauseButton.clicked, () => session.togglePause());
+        // Вкладку свернули — раунд встаёт сам. Движок в это время не тикает
+        // вовсе, так что доиграться без игрока раунд не может; пауза нужна для
+        // возвращения: иначе игра оживает в ту же секунду, когда игрок ещё
+        // смотрит на вкладку, а не на поле.
+        game.on(Game.EVENT_HIDE, this.pauseOnHide, this);
         this.subs.add(session.finished, () => this.spawner.recycleAll());
         session.start();
     }
 
     onDestroy(): void {
+        game.off(Game.EVENT_HIDE, this.pauseOnHide, this);
         this.subs.clear();
+    }
+
+    private pauseOnHide(): void {
+        if (this.session !== null) {
+            this.session.pause();
+        }
     }
 
     /**
@@ -106,14 +124,17 @@ export class LevelRoot extends Component {
 
         const step = Math.min(dt, level.maxStep);
         session.tick(step);
+        // Раунд не идёт — не идёт ничего: ни появление, ни падение, ни корзина.
+        // Иначе пауза останавливала бы только таймер, а поле продолжало жить.
+        if (!session.running) {
+            return;
+        }
 
-        if (session.running) {
-            const order = planner.tick(step);
-            if (order !== null) {
-                const behaviour = this.behaviours.get(order.item.id);
-                if (behaviour !== undefined) {
-                    this.spawner.spawn(order.item, behaviour, order.position);
-                }
+        const order = planner.tick(step);
+        if (order !== null) {
+            const behaviour = this.behaviours.get(order.item.id);
+            if (behaviour !== undefined) {
+                this.spawner.spawn(order.item, behaviour, order.position);
             }
         }
 
