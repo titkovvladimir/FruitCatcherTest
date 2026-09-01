@@ -4,23 +4,27 @@ import { Infer, SchemaError } from '../../utils/schema/Schema';
 import { Signal, Subscribable } from '../../utils/Signal';
 import { Difficulty } from './Difficulty';
 
-/** Ключ в хранилище. Своё имя, чтобы не спорить с соседями по домену. */
-const KEY = 'fruit-catcher.best-scores';
+/**
+ * Ключ в хранилище: у каждой сложности свой.
+ *
+ * Одной записью на все три было короче, но дороже: порченое число в тяжёлой
+ * уносило бы с собой рекорды лёгкой и обычной, и то же самое делала бы смена
+ * формата. Своя запись — своя потеря.
+ */
+const keyOf = (difficulty: Difficulty): string => `fruit-catcher.best.${difficulty}`;
 
 /**
- * Версия формата сохранения.
+ * Версия формата записи.
  *
- * Не украшение: сохранение живёт в браузере игрока и переживает выкладку новой
- * сборки. Встретив чужую версию, игра не гадает, а начинает с чистого листа —
- * это дешевле любой попытки угадать смысл старых полей.
+ * Не украшение: запись живёт в браузере игрока и переживает выкладку новой
+ * сборки. Встретив чужую версию, игра не гадает, а начинает эту сложность с
+ * чистого листа — это дешевле любой попытки угадать смысл старых полей.
  */
 const VERSION = 1;
 
 const SAVE = object({
     version: integer({ min: VERSION, max: VERSION }),
-    easy: integer({ min: 0 }),
-    normal: integer({ min: 0 }),
-    hard: integer({ min: 0 }),
+    score: integer({ min: 0 }),
 });
 
 type Save = Infer<typeof SAVE>;
@@ -68,29 +72,34 @@ export class BestScores {
             return false;
         }
         this.scores[difficulty] = score;
-        this.save();
+        const save: Save = { version: VERSION, score };
+        this.storage.write(keyOf(difficulty), JSON.stringify(save));
         this._changed.emit({ difficulty, score });
         return true;
     }
 
     private load(): { [D in Difficulty]: number } {
-        const empty = { easy: 0, normal: 0, hard: 0 };
-        try {
-            const raw = this.storage.read(KEY);
-            if (raw === null) {
-                return empty;
-            }
-            const save: Save = SAVE.parse(JSON.parse(raw), KEY);
-            return { easy: save.easy, normal: save.normal, hard: save.hard };
-        } catch (error) {
-            const reason = error instanceof SchemaError || error instanceof Error ? error.message : String(error);
-            console.warn(`Рекорды не прочитались и начинаются заново. ${reason}`);
-            return empty;
-        }
+        return {
+            easy: this.loadOne('easy'),
+            normal: this.loadOne('normal'),
+            hard: this.loadOne('hard'),
+        };
     }
 
-    private save(): void {
-        const save: Save = { version: VERSION, ...this.scores };
-        this.storage.write(KEY, JSON.stringify(save));
+    /** Рекорд одной сложности. Не прочитался — ноль, и только у неё одной. */
+    private loadOne(difficulty: Difficulty): number {
+        const key = keyOf(difficulty);
+        try {
+            const raw = this.storage.read(key);
+            if (raw === null) {
+                return 0;
+            }
+            const save: Save = SAVE.parse(JSON.parse(raw), key);
+            return save.score;
+        } catch (error) {
+            const reason = error instanceof SchemaError || error instanceof Error ? error.message : String(error);
+            console.warn(`Рекорд «${difficulty}» не прочитался и начинается заново. ${reason}`);
+            return 0;
+        }
     }
 }
