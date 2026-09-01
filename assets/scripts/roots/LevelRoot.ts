@@ -11,6 +11,7 @@ import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
 import { LivesView } from '../ui/core/LivesView';
+import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { PauseButton } from '../ui/core/PauseButton';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { TimerLabel } from '../ui/core/TimerLabel';
@@ -61,6 +62,9 @@ export class LevelRoot extends Component {
     @property(PauseButton)
     pauseButton: PauseButton = null!;
 
+    @property(LevelResultPanel)
+    resultPanel: LevelResultPanel = null!;
+
     private level: LevelConfig | null = null;
     private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
@@ -92,13 +96,32 @@ export class LevelRoot extends Component {
         // возвращения: иначе игра оживает в ту же секунду, когда игрок ещё
         // смотрит на вкладку, а не на поле.
         game.on(Game.EVENT_HIDE, this.pauseOnHide, this);
-        this.subs.add(session.finished, () => this.spawner.recycleAll());
+        this.subs.add(session.finished, outcome => {
+            this.spawner.recycleAll();
+            this.resultPanel.show(outcome);
+        });
+        this.subs.add(this.resultPanel.restartClicked, () => this.restart());
         session.start();
     }
 
     onDestroy(): void {
         game.off(Game.EVENT_HIDE, this.pauseOnHide, this);
         this.subs.clear();
+    }
+
+    /**
+     * Новый раунд на том же уровне. Планировщик сбрасывается вместе с сессией:
+     * иначе первый предмет появился бы по остатку отсчёта прошлого раунда.
+     */
+    private restart(): void {
+        const session = this.session;
+        const planner = this.planner;
+        if (session === null || planner === null) {
+            return;
+        }
+        this.resultPanel.hide();
+        planner.reset();
+        session.start();
     }
 
     private pauseOnHide(): void {
