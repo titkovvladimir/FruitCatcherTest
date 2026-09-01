@@ -1,13 +1,19 @@
 import { LevelConfig, readLevel } from '../../core/logic/config/LevelConfig';
+import { IConfigSource } from '../../platform/config/IConfigSource';
 import { Difficulty } from './Difficulty';
 
 /**
- * Сырые документы уровней — по одному на сложность.
+ * Имя документа для каждой сложности.
  *
- * Ключи заданы типом, а не строками: забыть один при связывании не даст
- * компилятор, и до рантайма такая ошибка не доедет.
+ * Живёт здесь, а не в сборщике: тот, кто подключает документы к источнику, и
+ * тот, кто их оттуда читает, обязаны называть их одинаково — значит имя должно
+ * быть одно на двоих.
  */
-export type LevelDocuments = { readonly [D in Difficulty]: unknown };
+export const LEVEL_DOCUMENTS: { readonly [D in Difficulty]: string } = {
+    easy: 'level-easy.json',
+    normal: 'level-normal.json',
+    hard: 'level-hard.json',
+};
 
 /** Разобранные уровни. Обращение по сложности всегда что-то находит. */
 export type LevelCatalog = { readonly [D in Difficulty]: LevelConfig };
@@ -17,11 +23,19 @@ export type LevelCatalog = { readonly [D in Difficulty]: LevelConfig };
  *
  * Опечатка в тяжёлом иначе нашлась бы через минуту игры на лёгком — уже после
  * того, как игрок выбрал уровень и настроился играть.
+ *
+ * Сложности перечислены руками, а не циклом по `DIFFICULTIES`: так тип каталога
+ * получается полным, и забытую ветку показывает компилятор.
  */
-export function readLevels(documents: LevelDocuments): LevelCatalog {
+export function readLevels(source: IConfigSource): LevelCatalog {
     return {
-        easy: readLevel(documents.easy, 'level-easy.json'),
-        normal: readLevel(documents.normal, 'level-normal.json'),
-        hard: readLevel(documents.hard, 'level-hard.json'),
+        easy: read(source, 'easy'),
+        normal: read(source, 'normal'),
+        hard: read(source, 'hard'),
     };
+}
+
+function read(source: IConfigSource, difficulty: Difficulty): LevelConfig {
+    const name = LEVEL_DOCUMENTS[difficulty];
+    return readLevel(source.read(name), name);
 }

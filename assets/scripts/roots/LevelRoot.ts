@@ -11,7 +11,9 @@ import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
 import { readDifficulty } from '../meta/logic/Difficulty';
-import { readLevels } from '../meta/logic/LevelCatalog';
+import { LEVEL_DOCUMENTS, readLevels } from '../meta/logic/LevelCatalog';
+import { IConfigSource } from '../platform/config/IConfigSource';
+import { JsonConfigSource } from '../platform/config/JsonConfigSource';
 import { LivesView } from '../ui/core/LivesView';
 import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { PauseButton } from '../ui/core/PauseButton';
@@ -35,6 +37,14 @@ const { ccclass, property } = _decorator;
  * одного числа, которую кто-то однажды поправит не везде.
  */
 const MAX_STEP = 0.1;
+
+/**
+ * Разбирает документ источника, называя его одним и тем же именем дважды: по
+ * нему документ находится и по нему же читается путь в сообщении об ошибке.
+ */
+function parse<T>(configs: IConfigSource, name: string, read: (raw: unknown, source: string) => T): T {
+    return read(configs.read(name), name);
+}
 
 /**
  * Сборка уровня: связывает правила раунда с тем, что видно на экране, и ведёт
@@ -116,18 +126,24 @@ export class LevelRoot extends Component {
      * у всех соседей уже отработал, и спрашивать их можно, ничего не угадывая.
      */
     start(): void {
-        const items = readFallingItems(this.itemsConfig.json, 'falling-items.json');
+        // Единственное место, где ассеты сцены превращаются в документы с
+        // именами. Дальше правила просят конфиг по имени и не знают, лежит он
+        // в сборке или пришёл откуда-то ещё.
+        const configs = new JsonConfigSource([
+            ['falling-items.json', this.itemsConfig.json],
+            ['basket.json', this.basketConfig.json],
+            [LEVEL_DOCUMENTS.easy, this.easyLevelConfig.json],
+            [LEVEL_DOCUMENTS.normal, this.normalLevelConfig.json],
+            [LEVEL_DOCUMENTS.hard, this.hardLevelConfig.json],
+        ]);
+
+        const items = parse(configs, 'falling-items.json', readFallingItems);
         // Разбираются все три уровня, играется один: опечатка в тяжёлом должна
         // найтись сейчас, а не после того, как игрок его выберет.
-        const levels = readLevels({
-            easy: this.easyLevelConfig.json,
-            normal: this.normalLevelConfig.json,
-            hard: this.hardLevelConfig.json,
-        });
-        const level = levels[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
+        const level = readLevels(configs)[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
         this.behaviours = createFallBehaviours(items, level.fallTempo);
         this.planner = new FallingItemSpawnPlanner(items, level.spawn, new MathRandomSource());
-        this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));
+        this.basket.bind(parse(configs, 'basket.json', readBasket));
 
         const session = new LevelSession(level);
         this.session = session;
