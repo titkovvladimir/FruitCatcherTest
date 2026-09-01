@@ -1,6 +1,8 @@
 import { _decorator, Component, JsonAsset } from 'cc';
+import { Basket } from '../core/components/basket/Basket';
 import { Field } from '../core/components/Field';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
+import { readBasket } from '../core/logic/config/BasketConfig';
 import { readFallingItems } from '../core/logic/config/FallingItemConfig';
 import { LevelConfig, readLevel } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
@@ -25,6 +27,9 @@ export class LevelRoot extends Component {
     @property(FallingItemSpawner)
     spawner: FallingItemSpawner = null!;
 
+    @property(Basket)
+    basket: Basket = null!;
+
     /** Таблица типов падающих предметов. */
     @property(JsonAsset)
     itemsConfig: JsonAsset = null!;
@@ -32,6 +37,10 @@ export class LevelRoot extends Component {
     /** Настройки уровня: длина раунда, жизни, густота спавна. */
     @property(JsonAsset)
     levelConfig: JsonAsset = null!;
+
+    /** Настройки корзины: скорость хода. */
+    @property(JsonAsset)
+    basketConfig: JsonAsset = null!;
 
     private level: LevelConfig | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
@@ -46,11 +55,12 @@ export class LevelRoot extends Component {
         this.level = readLevel(this.levelConfig.json, 'level-normal.json');
         this.behaviours = createFallBehaviours(items);
         this.planner = new FallingItemSpawnPlanner(items, this.level.spawn, new MathRandomSource());
+        this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));
     }
 
     /**
-     * Порядок в тике задан явно: сначала заказ на появление, потом движение
-     * всех предметов, потом уборка улетевших.
+     * Порядок в тике задан явно: заказ на появление, движение предметов,
+     * уборка улетевших, ход корзины.
      */
     update(dt: number): void {
         const level = this.level;
@@ -77,5 +87,7 @@ export class LevelRoot extends Component {
                 this.spawner.recycle(item);
             }
         }
+
+        this.basket.tick(step);
     }
 }

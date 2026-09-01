@@ -1,4 +1,4 @@
-import { _decorator, Component, UITransform } from 'cc';
+import { _decorator, Component, UITransform, Vec3 } from 'cc';
 
 const { ccclass } = _decorator;
 
@@ -45,6 +45,17 @@ export class Field extends Component {
     /** Верхняя граница: от неё предметы начинают падать. */
     get top(): number {
         return this.height * (1 - this.uiTransform.anchorY);
+    }
+
+    /**
+     * Переводит точку из мировых координат в координаты области.
+     *
+     * Нужно всем, кто получает точку снаружи: курсор мыши, узел корзины,
+     * проём. Живёт здесь, чтобы перевод был в одном месте, а не повторялся в
+     * каждом, кому он понадобился.
+     */
+    toLocal(world: Vec3, out?: Vec3): Vec3 {
+        return this.uiTransform.convertToNodeSpaceAR(world, out);
     }
 
     private get uiTransform(): UITransform {
