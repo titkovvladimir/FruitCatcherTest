@@ -472,7 +472,6 @@ assets/scripts/
       catch/CatchResolver.ts
       config/FallingItemConfig.ts
       config/LevelConfig.ts
-      config/BasketConfig.ts
     components/
       Field.ts
       fallingItem/FallingItem.ts
@@ -536,8 +535,8 @@ Game
 картинок нет, поэтому жизни рисуются символами в одном `Label`, а не рядом
 узлов из префаба: своё сердце пришлось бы либо рисовать, либо собирать из
 фруктов — а фрукт в этой игре уже означает добычу.
-Конфиги: `falling-items.json`, `basket.json`, `level-easy.json`,
-`level-normal.json`, `level-hard.json`.
+Конфиги: `falling-items.json`, `level-easy.json`, `level-normal.json`,
+`level-hard.json`.
 
 Владельцы сигналов — по п. 3 объявлены полями у владельца состояния:
 

@@ -1,16 +1,19 @@
 import { _decorator, Component, Node, UITransform, Vec3 } from 'cc';
 import { BasketMouth } from '../../logic/catch/CatchResolver';
-import { BasketConfig } from '../../logic/config/BasketConfig';
 import { Field } from '../Field';
 
 const { ccclass, property } = _decorator;
 
 /**
- * Корзина: едет за целевой точкой и отдаёт разбору ловли свой проём.
+ * Корзина: стоит там, куда целится игрок, и отдаёт разбору ловли свой проём.
  *
- * Целевую точку запоминает ввод, а едет корзина в тике. Иначе скорость
- * движения зависела бы от частоты событий мыши, то есть от мыши игрока, а не
- * от игры.
+ * Собственной скорости у неё нет — корзина повторяет курсор без отставания.
+ * Скорость руки игрока и есть здесь ограничение, и добавлять к ней вторую,
+ * свою, значит спорить с ней: игрок уже привёл прицел куда хотел, а корзина
+ * ещё едет.
+ *
+ * Целевую точку запоминает ввод, а встаёт корзина в тике. Так проём за кадр
+ * меняется один раз и в известный момент — до разбора ловли, а не посреди него.
  */
 @ccclass('Basket')
 export class Basket extends Component {
@@ -23,7 +26,6 @@ export class Basket extends Component {
     mouth: Node = null!;
 
     private transform: UITransform = null!;
-    private config: BasketConfig | null = null;
     private targetX = 0;
 
     private readonly worldPoint = new Vec3();
@@ -42,30 +44,13 @@ export class Basket extends Component {
         return { y: this.localPoint.y, centerX: this.localPoint.x, halfWidth: width / 2 };
     }
 
-    bind(config: BasketConfig): void {
-        this.config = config;
-    }
-
     /** Ввод только запоминает, куда игрок целится. Двигаться — работа тика. */
     aimAt(x: number): void {
         this.targetX = x;
     }
 
-    tick(dt: number): void {
-        const config = this.config;
-        if (config === null) {
-            return;
-        }
-        const target = this.clampToField(this.targetX);
-        const current = this.node.position.x;
-        const distance = target - current;
-
-        if (Math.abs(distance) <= config.snapDistance) {
-            this.node.setPosition(target, this.node.position.y);
-            return;
-        }
-        const step = Math.min(Math.abs(distance), config.speed * dt);
-        this.node.setPosition(current + Math.sign(distance) * step, this.node.position.y);
+    tick(): void {
+        this.node.setPosition(this.clampToField(this.targetX), this.node.position.y);
     }
 
     /**

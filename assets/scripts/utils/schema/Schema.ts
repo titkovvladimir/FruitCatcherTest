@@ -30,7 +30,7 @@ export interface Schema<T> {
 
 /**
  * Тип, который отдаёт схема. Ради него всё и затевалось:
- * `export type BasketConfig = Infer<typeof BASKET>` — второго описания полей,
+ * `export type LevelConfig = Infer<typeof LEVEL>` — второго описания полей,
  * которое можно забыть поправить, в проекте нет.
  */
 export type Infer<S extends Schema<unknown>> = S extends Schema<infer T> ? T : never;

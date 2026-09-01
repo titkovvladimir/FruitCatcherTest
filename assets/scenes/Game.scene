@@ -932,10 +932,6 @@
     "basket": {
       "__id__": 36
     },
-    "basketConfig": {
-      "__uuid__": "a567385d-344c-41ae-bedf-e1e66b989f86",
-      "__expectedType__": "cc.JsonAsset"
-    },
     "scoreLabel": {
       "__id__": 46
     },

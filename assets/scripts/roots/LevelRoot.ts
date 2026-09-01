@@ -4,7 +4,6 @@ import { Field } from '../core/components/Field';
 import { BasketControl } from '../core/components/basket/BasketControl';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
 import { resolveCatch } from '../core/logic/catch/CatchResolver';
-import { readBasket } from '../core/logic/config/BasketConfig';
 import { FallingItemConfig, readFallingItems } from '../core/logic/config/FallingItemConfig';
 import { LevelConfig } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
@@ -75,10 +74,6 @@ export class LevelRoot extends Component {
     @property(JsonAsset)
     itemsConfig: JsonAsset = null!;
 
-    /** Настройки корзины: скорость хода. */
-    @property(JsonAsset)
-    basketConfig: JsonAsset = null!;
-
     /**
      * Контейнер показателей раунда: счёт, таймер, жизни, пауза.
      *
@@ -130,12 +125,8 @@ export class LevelRoot extends Component {
         // Единственное место, где ассеты сцены превращаются в документы с
         // именами. Дальше правила просят конфиг по имени и не знают, лежит он
         // в сборке или пришёл откуда-то ещё.
-        const configs = new JsonConfigSource([
-            ['falling-items.json', this.itemsConfig.json],
-            ['basket.json', this.basketConfig.json],
-        ]);
+        const configs = new JsonConfigSource([['falling-items.json', this.itemsConfig.json]]);
         this.items = parse(configs, 'falling-items.json', readFallingItems);
-        this.basket.bind(parse(configs, 'basket.json', readBasket));
 
         const session = this.session;
         // Виджеты связываются до старта раунда: иначе первый счёт и первая
@@ -258,6 +249,6 @@ export class LevelRoot extends Component {
             }
         }
 
-        this.basket.tick(step);
+        this.basket.tick();
     }
 }

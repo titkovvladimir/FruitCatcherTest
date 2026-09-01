@@ -235,12 +235,14 @@ tools/             служебные скрипты: проверки репо�
 компилятора:
 
 ```ts
-const BASKET = object({
-    speed: number({ min: 1 }),
-    snapDistance: number({ min: 0, max: 50 }),
+const LEVEL = object({
+    duration: number({ min: 1 }),
+    lives: integer({ min: 1 }),
+    fallTempo: number({ min: 0.5, max: 2 }),
+    spawn: SPAWN,
 });
 
-export type BasketConfig = Infer<typeof BASKET>;
+export type LevelConfig = Infer<typeof LEVEL>;
 ```
 
 Второго списка полей, который можно забыть поправить, в проекте нет — а он
