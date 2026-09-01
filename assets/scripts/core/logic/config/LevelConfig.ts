@@ -1,15 +1,39 @@
+import { integer, number, object, refine } from '../../../utils/schema/builders';
+import { Infer, Schema, SchemaError } from '../../../utils/schema/Schema';
 import { SpawnPlan } from '../spawn/SpawnPlan';
-import { asInteger, asNumber, asObject } from './checks';
+
+/**
+ * Густота спавна. Тип у неё свой и общий с планировщиком (`SpawnPlan`), поэтому
+ * схема не выводит его, а обязуется отдать: разъедутся — не соберётся.
+ *
+ * Порядок границ проверяется правилом поверх схемы: по отдельности оба числа
+ * законны, беда видна только на паре.
+ */
+const SPAWN: Schema<SpawnPlan> = refine(
+    object({
+        minInterval: number({ min: 0.01 }),
+        maxInterval: number({ min: 0.01 }),
+    }),
+    (spawn, path) => {
+        if (spawn.maxInterval < spawn.minInterval) {
+            throw SchemaError.expected(
+                `${path}.maxInterval`,
+                `число не меньше minInterval (${spawn.minInterval})`,
+                spawn.maxInterval,
+            );
+        }
+    },
+);
 
 /**
  * Настройки одного уровня. Отличие лёгкого от тяжёлого целиком здесь: кода,
  * который знал бы про сложность, в игре нет.
  */
-export interface LevelConfig {
+const LEVEL = object({
     /** Длина раунда в секундах. */
-    readonly duration: number;
+    duration: number({ min: 1 }),
     /** Запас жизней на раунд. */
-    readonly lives: number;
+    lives: integer({ min: 1 }),
     /**
      * Потолок шага времени, секунд.
      *
@@ -17,21 +41,12 @@ export interface LevelConfig {
      * сколько угодно. Без потолка предметы за один кадр перепрыгнули бы поле
      * целиком, а таймер отсчитал бы полраунда.
      */
-    readonly maxStep: number;
-    readonly spawn: SpawnPlan;
-}
+    maxStep: number({ min: 0.01, max: 1 }),
+    spawn: SPAWN,
+});
+
+export type LevelConfig = Infer<typeof LEVEL>;
 
 export function readLevel(raw: unknown, source = 'level'): LevelConfig {
-    const level = asObject(raw, source);
-    const spawn = asObject(level.spawn, `${source}.spawn`);
-    const minInterval = asNumber(spawn.minInterval, `${source}.spawn.minInterval`, { min: 0.01 });
-    return {
-        duration: asNumber(level.duration, `${source}.duration`, { min: 1 }),
-        lives: asInteger(level.lives, `${source}.lives`, { min: 1 }),
-        maxStep: asNumber(level.maxStep, `${source}.maxStep`, { min: 0.01, max: 1 }),
-        spawn: {
-            minInterval,
-            maxInterval: asNumber(spawn.maxInterval, `${source}.spawn.maxInterval`, { min: minInterval }),
-        },
-    };
+    return LEVEL.parse(raw, source);
 }

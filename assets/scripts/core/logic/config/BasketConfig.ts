@@ -1,4 +1,5 @@
-import { asNumber, asObject } from './checks';
+import { number, object } from '../../../utils/schema/builders';
+import { Infer } from '../../../utils/schema/Schema';
 
 /**
  * Настройки корзины.
@@ -7,7 +8,7 @@ import { asNumber, asObject } from './checks';
  * которые читаются в рантайме. В конфиге живёт только то, что настраивают на
  * ощупь.
  */
-export interface BasketConfig {
+const BASKET = object({
     /**
      * Наибольшая скорость корзины, точек в секунду.
      *
@@ -15,15 +16,13 @@ export interface BasketConfig {
      * скорость движения зависела бы от частоты событий ввода, то есть от мыши
      * игрока, а не от игры.
      */
-    readonly speed: number;
+    speed: number({ min: 1 }),
     /** Ближе этого расстояния корзина просто встаёт в цель, чтобы не дрожать. */
-    readonly snapDistance: number;
-}
+    snapDistance: number({ min: 0, max: 50 }),
+});
+
+export type BasketConfig = Infer<typeof BASKET>;
 
 export function readBasket(raw: unknown, source = 'basket'): BasketConfig {
-    const basket = asObject(raw, source);
-    return {
-        speed: asNumber(basket.speed, `${source}.speed`, { min: 1 }),
-        snapDistance: asNumber(basket.snapDistance, `${source}.snapDistance`, { min: 0, max: 50 }),
-    };
+    return BASKET.parse(raw, source);
 }
