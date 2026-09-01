@@ -13,6 +13,7 @@ import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPla
 import { LivesView } from '../ui/core/LivesView';
 import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { PauseButton } from '../ui/core/PauseButton';
+import { PauseOverlay } from '../ui/core/PauseOverlay';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
@@ -62,6 +63,9 @@ export class LevelRoot extends Component {
     @property(PauseButton)
     pauseButton: PauseButton = null!;
 
+    @property(PauseOverlay)
+    pauseOverlay: PauseOverlay = null!;
+
     @property(LevelResultPanel)
     resultPanel: LevelResultPanel = null!;
 
@@ -90,6 +94,7 @@ export class LevelRoot extends Component {
         this.timerLabel.bind(session);
         this.livesView.bind(session);
         this.pauseButton.bind(session);
+        this.pauseOverlay.bind(session);
         this.subs.add(this.pauseButton.clicked, () => session.togglePause());
         // Вкладку свернули — раунд встаёт сам. Движок в это время не тикает
         // вовсе, так что доиграться без игрока раунд не может; пауза нужна для
