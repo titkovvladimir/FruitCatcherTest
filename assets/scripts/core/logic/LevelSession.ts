@@ -21,7 +21,6 @@ export class LevelSession {
     private _maxLives = 0;
     private _timeLeft = 0;
     private _streak = 0;
-    private _comboMax = 1;
 
     private readonly _scoreChanged = new Signal<number>('scoreChanged');
     private readonly _lifeLost = new Signal<number>('lifeLost');
@@ -107,7 +106,6 @@ export class LevelSession {
         this._maxLives = config.lives;
         this._timeLeft = config.duration;
         this._streak = 0;
-        this._comboMax = config.comboMax;
         this.setState('running');
         this._scoreChanged.emit(this._score);
         this._timeChanged.emit(this.secondsLeft);
@@ -211,9 +209,10 @@ export class LevelSession {
     }
 
     /**
-     * Множитель равен длине серии: два подряд — вдвое, три — втрое. Серия выше
-     * потолка не растёт, поэтому множитель и серия — одно и то же число, и
-     * укоротить его кислым видно сразу.
+     * Множитель равен длине серии: два подряд — вдвое, три — втрое, и так
+     * далее. Потолка нет — длинная серия и должна платить непристойно много,
+     * иначе держать её незачем; обрывается она сама, и тем чаще, чем гуще
+     * поток.
      */
     private get multiplier(): number {
         return Math.max(1, this._streak);
@@ -221,7 +220,7 @@ export class LevelSession {
 
     private changeStreak(effect: FallingItemConfig['combo']): void {
         if (effect === 'grow') {
-            this.setStreak(Math.min(this._streak + 1, this._comboMax));
+            this.setStreak(this._streak + 1);
         } else if (effect === 'drop') {
             this.setStreak(Math.max(0, this._streak - 1));
         } else {
