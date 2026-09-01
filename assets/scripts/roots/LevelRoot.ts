@@ -10,6 +10,7 @@ import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
+import { LivesView } from '../ui/core/LivesView';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
@@ -53,6 +54,9 @@ export class LevelRoot extends Component {
     @property(TimerLabel)
     timerLabel: TimerLabel = null!;
 
+    @property(LivesView)
+    livesView: LivesView = null!;
+
     private level: LevelConfig | null = null;
     private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
@@ -76,6 +80,7 @@ export class LevelRoot extends Component {
         // секунда прошли бы мимо них, а снимок они возьмут уже обнулённый.
         this.scoreLabel.bind(session);
         this.timerLabel.bind(session);
+        this.livesView.bind(session);
         this.subs.add(session.finished, () => this.spawner.recycleAll());
         session.start();
     }
