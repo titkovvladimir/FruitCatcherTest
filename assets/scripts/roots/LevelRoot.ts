@@ -1,26 +1,26 @@
-import { _decorator, Component, Game, game, JsonAsset } from 'cc';
+import { _decorator, Component, Game, game, JsonAsset, Node } from 'cc';
 import { Basket } from '../core/components/basket/Basket';
 import { Field } from '../core/components/Field';
 import { BasketControl } from '../core/components/basket/BasketControl';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
 import { resolveCatch } from '../core/logic/catch/CatchResolver';
 import { readBasket } from '../core/logic/config/BasketConfig';
-import { readFallingItems } from '../core/logic/config/FallingItemConfig';
+import { FallingItemConfig, readFallingItems } from '../core/logic/config/FallingItemConfig';
+import { LevelConfig } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
+import { LevelOutcome } from '../core/logic/LevelOutcome';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
-import { readDifficulty } from '../meta/logic/Difficulty';
-import { LEVEL_DOCUMENTS, readLevels } from '../meta/logic/LevelCatalog';
 import { IConfigSource } from '../platform/config/IConfigSource';
 import { JsonConfigSource } from '../platform/config/JsonConfigSource';
 import { LivesView } from '../ui/core/LivesView';
-import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { PauseButton } from '../ui/core/PauseButton';
 import { PauseOverlay } from '../ui/core/PauseOverlay';
 import { ScoreLabel } from '../ui/core/ScoreLabel';
 import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
+import { Subscribable } from '../utils/Signal';
 import { SubscriptionBag } from '../utils/SubscriptionBag';
 
 const { ccclass, property } = _decorator;
@@ -50,6 +50,10 @@ function parse<T>(configs: IConfigSource, name: string, read: (raw: unknown, sou
  * Сборка уровня: связывает правила раунда с тем, что видно на экране, и ведёт
  * один-единственный тик.
  *
+ * Раунд сам собой не начинается: пока никто не позвал `play`, поле пусто и
+ * раунд стоит в покое. Какой уровень играть, решает мета; сюда приходят готовые
+ * настройки, и про сложность этот файл не знает.
+ *
  * Правил игры здесь нет и быть не должно. Проверка простая: появилось `if` про
  * игру — значит файл выбран неправильно, такому место в `core/logic`.
  */
@@ -71,32 +75,19 @@ export class LevelRoot extends Component {
     @property(JsonAsset)
     itemsConfig: JsonAsset = null!;
 
-    /**
-     * Настройки уровня по сложностям: длина раунда, жизни, темп падения,
-     * густота спавна. Три ассета, а не один список: так связывание проверяет
-     * компилятор, а не порядок строк в сцене.
-     */
-    @property(JsonAsset)
-    easyLevelConfig: JsonAsset = null!;
-
-    @property(JsonAsset)
-    normalLevelConfig: JsonAsset = null!;
-
-    @property(JsonAsset)
-    hardLevelConfig: JsonAsset = null!;
-
-    /**
-     * На какой сложности играется раунд.
-     *
-     * Пока стоит в сцене: выбор игрока приходит вместе с кнопками сложности и
-     * состоянием покоя до запуска.
-     */
-    @property
-    difficulty: string = 'normal';
-
     /** Настройки корзины: скорость хода. */
     @property(JsonAsset)
     basketConfig: JsonAsset = null!;
+
+    /**
+     * Контейнер показателей раунда: счёт, таймер, жизни, пауза.
+     *
+     * Нужен целиком, а не по виджету: до первого раунда показывать нечего, а
+     * нули на счётчиках рядом с меню читались бы как игра, в которой ничего не
+     * происходит.
+     */
+    @property(Node)
+    hud: Node = null!;
 
     @property(ScoreLabel)
     scoreLabel: ScoreLabel = null!;
@@ -113,13 +104,23 @@ export class LevelRoot extends Component {
     @property(PauseOverlay)
     pauseOverlay: PauseOverlay = null!;
 
-    @property(LevelResultPanel)
-    resultPanel: LevelResultPanel = null!;
-
-    private session: LevelSession | null = null;
+    /**
+     * Раунд заводится вместе с компонентом, а не с первым `play`.
+     *
+     * Так подписаться на него можно раньше, чем игрок что-нибудь выбрал, и
+     * порядок `start` у соседей по сцене перестаёт что-либо значить.
+     */
+    private readonly session = new LevelSession();
+    private readonly random = new MathRandomSource();
+    private readonly subs = new SubscriptionBag();
+    private items: readonly FallingItemConfig[] = [];
     private planner: FallingItemSpawnPlanner | null = null;
     private behaviours = new Map<string, FallBehaviour>();
-    private readonly subs = new SubscriptionBag();
+
+    /** Итог раунда для тех, кому он нужен снаружи: меты и панели итога. */
+    get finished(): Subscribable<LevelOutcome> {
+        return this.session.finished;
+    }
 
     /**
      * Связывание живёт в `start`, а не в `onLoad`: к этому моменту `onLoad`
@@ -132,21 +133,11 @@ export class LevelRoot extends Component {
         const configs = new JsonConfigSource([
             ['falling-items.json', this.itemsConfig.json],
             ['basket.json', this.basketConfig.json],
-            [LEVEL_DOCUMENTS.easy, this.easyLevelConfig.json],
-            [LEVEL_DOCUMENTS.normal, this.normalLevelConfig.json],
-            [LEVEL_DOCUMENTS.hard, this.hardLevelConfig.json],
         ]);
-
-        const items = parse(configs, 'falling-items.json', readFallingItems);
-        // Разбираются все три уровня, играется один: опечатка в тяжёлом должна
-        // найтись сейчас, а не после того, как игрок его выберет.
-        const level = readLevels(configs)[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
-        this.behaviours = createFallBehaviours(items, level.fallTempo);
-        this.planner = new FallingItemSpawnPlanner(items, level.spawn, new MathRandomSource());
+        this.items = parse(configs, 'falling-items.json', readFallingItems);
         this.basket.bind(parse(configs, 'basket.json', readBasket));
 
-        const session = new LevelSession(level);
-        this.session = session;
+        const session = this.session;
         // Виджеты связываются до старта раунда: иначе первый счёт и первая
         // секунда прошли бы мимо них, а снимок они возьмут уже обнулённый.
         this.scoreLabel.bind(session);
@@ -155,23 +146,24 @@ export class LevelRoot extends Component {
         this.pauseButton.bind(session);
         this.pauseOverlay.bind(session);
         this.subs.add(this.pauseButton.clicked, () => session.togglePause());
-        // Управление слушает мышь только пока раунд идёт. Иначе прицел живёт и
-        // на паузе: корзина стоит, а цель уезжает за курсором — и снятие паузы
-        // отправляет её туда, куда игрок не целился.
         this.subs.add(session.stateChanged, state => {
+            // Показатели живут ровно столько, сколько идёт раунд.
+            this.hud.active = state !== 'idle';
+            // Управление слушает мышь только пока раунд идёт. Иначе прицел
+            // живёт и на паузе: корзина стоит, а цель уезжает за курсором — и
+            // снятие паузы отправляет её туда, куда игрок не целился.
             this.basketControl.enabled = state === 'running';
         });
+        this.subs.add(session.finished, () => this.spawner.recycleAll());
         // Вкладку свернули — раунд встаёт сам. Движок в это время не тикает
         // вовсе, так что доиграться без игрока раунд не может; пауза нужна для
         // возвращения: иначе игра оживает в ту же секунду, когда игрок ещё
         // смотрит на вкладку, а не на поле.
         game.on(Game.EVENT_HIDE, this.pauseOnHide, this);
-        this.subs.add(session.finished, outcome => {
-            this.spawner.recycleAll();
-            this.resultPanel.show(outcome);
-        });
-        this.subs.add(this.resultPanel.restartClicked, () => this.restart());
-        session.start();
+
+        // Покой до первого раунда: поле пустое, показателей нет, корзина стоит.
+        this.hud.active = false;
+        this.basketControl.enabled = false;
     }
 
     onDestroy(): void {
@@ -180,24 +172,34 @@ export class LevelRoot extends Component {
     }
 
     /**
-     * Новый раунд на том же уровне. Планировщик сбрасывается вместе с сессией:
-     * иначе первый предмет появился бы по остатку отсчёта прошлого раунда.
+     * Начать раунд по этим настройкам — первый или любой следующий.
+     *
+     * Поведения падения и планировщик заводятся здесь, а не в `start`: темп и
+     * густота приходят с уровнем и меняются вместе с ним. Заодно это сбрасывает
+     * отсчёт до первого предмета — иначе он появился бы по остатку от прошлого
+     * раунда.
      */
-    private restart(): void {
-        const session = this.session;
-        const planner = this.planner;
-        if (session === null || planner === null) {
-            return;
-        }
-        this.resultPanel.hide();
-        planner.reset();
-        session.start();
+    play(level: LevelConfig): void {
+        this.spawner.recycleAll();
+        this.behaviours = createFallBehaviours(this.items, level.fallTempo);
+        this.planner = new FallingItemSpawnPlanner(this.items, level.spawn, this.random);
+        this.session.start(level);
+    }
+
+    /**
+     * Вернуть игру в покой: поле пустое, показателей нет, раунд закрыт.
+     *
+     * Нужно, когда игрок ушёл с панели итога обратно к выбору: без этого
+     * показатели доигранного раунда остались бы висеть поверх меню.
+     */
+    stop(): void {
+        this.spawner.recycleAll();
+        this.planner = null;
+        this.session.reset();
     }
 
     private pauseOnHide(): void {
-        if (this.session !== null) {
-            this.session.pause();
-        }
+        this.session.pause();
     }
 
     /**
@@ -210,7 +212,7 @@ export class LevelRoot extends Component {
     update(dt: number): void {
         const planner = this.planner;
         const session = this.session;
-        if (planner === null || session === null) {
+        if (planner === null) {
             return;
         }
 

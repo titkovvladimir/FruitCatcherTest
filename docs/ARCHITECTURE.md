@@ -516,14 +516,16 @@ Game
 │  │  │     ├─ BucketBack
 │  │  │     ├─ Mouth                   UITransform = линия и ширина проёма
 │  │  │     └─ BucketFront             последний → рисуется поверх
-│  │  ├─ LevelHud                      контейнер без скрипта
+│  │  ├─ LevelHud                      контейнер, гаснет вне раунда
 │  │  │  ├─ Score / Timer              Label в каждом
 │  │  │  ├─ Lives                      Label: ♥ за жизнь, ♡ за потраченную
 │  │  │  └─ PauseButton
 │  │  └─ Panels/LevelResultPanel       Dimmer, итог, рекорд сложности,
 │  │                                   RestartButton, MenuButton
 │  └─ Meta
-│     └─ Buttons                       EasyButton, NormalButton, HardButton
+│     └─ Menu                          показан в покое, спрятан на раунд
+│        ├─ Title / Hint               Label в каждом
+│        └─ EasyButton / NormalButton / HardButton
 └─ Logics
    ├─ Core                             LevelRoot, FallingItemSpawner
    └─ Meta                             GameRoot

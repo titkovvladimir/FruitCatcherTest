@@ -18,28 +18,33 @@ export class LivesView extends Component {
     label: Label = null!;
 
     private readonly subs = new SubscriptionBag();
-    private total = 0;
+    private session: LevelSession | null = null;
 
+    /**
+     * Число ячеек берётся у раунда на каждой перерисовке, а не запоминается
+     * здесь: у сложностей запас разный, и запомненное однажды показывало бы
+     * запас прошлого раунда.
+     */
     bind(session: LevelSession): void {
-        this.total = session.lives;
-        this.render(session.lives);
-        this.subs.add(session.lifeLost, lives => this.render(lives));
+        this.session = session;
+        this.render();
+        this.subs.add(session.lifeLost, () => this.render());
         // Новый раунд возвращает жизни молча: событие есть только на потерю.
-        this.subs.add(session.stateChanged, state => {
-            if (state === 'running') {
-                this.render(session.lives);
-            }
-        });
+        this.subs.add(session.stateChanged, () => this.render());
     }
 
     onDestroy(): void {
         this.subs.clear();
     }
 
-    private render(lives: number): void {
+    private render(): void {
+        const session = this.session;
+        if (session === null) {
+            return;
+        }
         let hearts = '';
-        for (let i = 0; i < this.total; i += 1) {
-            hearts += i < lives ? '♥' : '♡';
+        for (let i = 0; i < session.maxLives; i += 1) {
+            hearts += i < session.lives ? '♥' : '♡';
         }
         this.label.string = hearts;
     }

@@ -5,11 +5,12 @@ import { Signal, Subscribable } from '../../../utils/Signal';
 const { ccclass, property } = _decorator;
 
 /**
- * Итог раунда: чем он кончился, сколько набрано и предложение сыграть ещё.
+ * Итог раунда: чем он кончился, сколько набрано и два выхода — тот же уровень
+ * ещё раз или назад к выбору сложности.
  *
- * Панель не перезапускает раунд сама — поднимает событие, а решает раунд.
- * Иначе показ знал бы, как устроен запуск, и второй способ начать игру (кнопка
- * сложности из меты) пришлось бы учить тому же самому.
+ * Панель ничего не запускает сама — поднимает событие, а решает мета. Иначе
+ * показ знал бы, как устроен запуск, и второму способу начать игру — кнопке
+ * сложности — пришлось бы знать то же самое во второй раз.
  */
 @ccclass('LevelResultPanel')
 export class LevelResultPanel extends Component {
@@ -23,18 +24,29 @@ export class LevelResultPanel extends Component {
     @property(Node)
     restartButton: Node = null!;
 
+    /** Тот же уровень ещё раз — или обратно к выбору сложности. */
+    @property(Node)
+    menuButton: Node = null!;
+
     private readonly _restartClicked = new Signal('restartClicked');
+    private readonly _menuClicked = new Signal('menuClicked');
 
     get restartClicked(): Subscribable<void> {
         return this._restartClicked;
     }
 
+    get menuClicked(): Subscribable<void> {
+        return this._menuClicked;
+    }
+
     onEnable(): void {
         this.restartButton.on(Button.EventType.CLICK, this.onRestart, this);
+        this.menuButton.on(Button.EventType.CLICK, this.onMenu, this);
     }
 
     onDisable(): void {
         this.restartButton.off(Button.EventType.CLICK, this.onRestart, this);
+        this.menuButton.off(Button.EventType.CLICK, this.onMenu, this);
     }
 
     show(outcome: LevelOutcome): void {
@@ -49,5 +61,9 @@ export class LevelResultPanel extends Component {
 
     private onRestart(): void {
         this._restartClicked.emit();
+    }
+
+    private onMenu(): void {
+        this._menuClicked.emit();
     }
 }

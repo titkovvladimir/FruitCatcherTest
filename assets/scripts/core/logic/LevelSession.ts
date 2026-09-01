@@ -15,19 +15,15 @@ export class LevelSession {
     private _score = 0;
     private _caught = 0;
     private _missed = 0;
-    private _lives: number;
-    private _timeLeft: number;
+    private _lives = 0;
+    private _maxLives = 0;
+    private _timeLeft = 0;
 
     private readonly _scoreChanged = new Signal<number>('scoreChanged');
     private readonly _lifeLost = new Signal<number>('lifeLost');
     private readonly _timeChanged = new Signal<number>('timeChanged');
     private readonly _stateChanged = new Signal<LevelState>('stateChanged');
     private readonly _finished = new Signal<LevelOutcome>('finished');
-
-    constructor(private readonly config: LevelConfig) {
-        this._lives = config.lives;
-        this._timeLeft = config.duration;
-    }
 
     /** Новый счёт. */
     get scoreChanged(): Subscribable<number> {
@@ -68,21 +64,53 @@ export class LevelSession {
         return this._lives;
     }
 
+    /**
+     * Сколько жизней было в начале раунда. У сложностей запас разный, поэтому
+     * число ячеек в индикаторе — свойство идущего раунда, а не игры вообще.
+     */
+    get maxLives(): number {
+        return this._maxLives;
+    }
+
     /** Секунд до конца, как их видит игрок: округление вверх. */
     get secondsLeft(): number {
         return Math.ceil(this._timeLeft);
     }
 
-    /** Начало раунда — и первого, и любого следующего. */
-    start(): void {
+    /**
+     * Начало раунда — и первого, и любого следующего.
+     *
+     * Настройки приходят вместе с началом, а не в конструктор: сложность
+     * выбирают между раундами, и раунд, привязанный к уровню на всю жизнь,
+     * пришлось бы заводить заново — вместе с ним и все подписки показа.
+     */
+    start(config: LevelConfig): void {
         this._score = 0;
         this._caught = 0;
         this._missed = 0;
-        this._lives = this.config.lives;
-        this._timeLeft = this.config.duration;
+        this._lives = config.lives;
+        this._maxLives = config.lives;
+        this._timeLeft = config.duration;
         this.setState('running');
         this._scoreChanged.emit(this._score);
         this._timeChanged.emit(this.secondsLeft);
+    }
+
+    /**
+     * Вернуть раунд в покой: игрок ушёл к выбору сложности.
+     *
+     * Отдельно от `start`, потому что это не начало нового раунда, а отказ от
+     * прошлого: пока сложность не выбрана заново, показывать нечего — ни счёта,
+     * ни времени, ни жизней.
+     */
+    reset(): void {
+        this._score = 0;
+        this._caught = 0;
+        this._missed = 0;
+        this._lives = 0;
+        this._maxLives = 0;
+        this._timeLeft = 0;
+        this.setState('idle');
     }
 
     /** Идемпотентна: пауза на паузе ничего не делает. */
