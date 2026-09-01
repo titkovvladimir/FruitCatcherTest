@@ -147,8 +147,11 @@ export class LevelRoot extends Component {
         this.pauseOverlay.bind(session);
         this.subs.add(this.pauseButton.clicked, () => session.togglePause());
         this.subs.add(session.stateChanged, state => {
-            // Показатели живут ровно столько, сколько идёт раунд.
-            this.hud.active = state !== 'idle';
+            // Показатели и корзина живут ровно столько, сколько идёт раунд:
+            // в покое на экране меню, а корзине под кнопками делать нечего.
+            const started = state !== 'idle';
+            this.hud.active = started;
+            this.basket.node.active = started;
             // Управление слушает мышь только пока раунд идёт. Иначе прицел
             // живёт и на паузе: корзина стоит, а цель уезжает за курсором — и
             // снятие паузы отправляет её туда, куда игрок не целился.
@@ -161,8 +164,9 @@ export class LevelRoot extends Component {
         // смотрит на вкладку, а не на поле.
         game.on(Game.EVENT_HIDE, this.pauseOnHide, this);
 
-        // Покой до первого раунда: поле пустое, показателей нет, корзина стоит.
+        // Покой до первого раунда: поле пустое, показателей нет, корзины тоже.
         this.hud.active = false;
+        this.basket.node.active = false;
         this.basketControl.enabled = false;
     }
 
