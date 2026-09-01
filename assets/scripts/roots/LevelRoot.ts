@@ -6,11 +6,13 @@ import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSp
 import { resolveCatch } from '../core/logic/catch/CatchResolver';
 import { readBasket } from '../core/logic/config/BasketConfig';
 import { readFallingItems } from '../core/logic/config/FallingItemConfig';
-import { LevelConfig, readLevel } from '../core/logic/config/LevelConfig';
+import { LevelConfig } from '../core/logic/config/LevelConfig';
 import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
+import { readDifficulty } from '../meta/logic/Difficulty';
+import { readLevels } from '../meta/logic/LevelCatalog';
 import { LivesView } from '../ui/core/LivesView';
 import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { PauseButton } from '../ui/core/PauseButton';
@@ -47,9 +49,28 @@ export class LevelRoot extends Component {
     @property(JsonAsset)
     itemsConfig: JsonAsset = null!;
 
-    /** Настройки уровня: длина раунда, жизни, густота спавна. */
+    /**
+     * Настройки уровня по сложностям: длина раунда, жизни, темп падения,
+     * густота спавна. Три ассета, а не один список: так связывание проверяет
+     * компилятор, а не порядок строк в сцене.
+     */
     @property(JsonAsset)
-    levelConfig: JsonAsset = null!;
+    easyLevelConfig: JsonAsset = null!;
+
+    @property(JsonAsset)
+    normalLevelConfig: JsonAsset = null!;
+
+    @property(JsonAsset)
+    hardLevelConfig: JsonAsset = null!;
+
+    /**
+     * На какой сложности играется раунд.
+     *
+     * Пока стоит в сцене: выбор игрока приходит вместе с кнопками сложности и
+     * состоянием покоя до запуска.
+     */
+    @property
+    difficulty: string = 'normal';
 
     /** Настройки корзины: скорость хода. */
     @property(JsonAsset)
@@ -85,7 +106,14 @@ export class LevelRoot extends Component {
      */
     start(): void {
         const items = readFallingItems(this.itemsConfig.json, 'falling-items.json');
-        this.level = readLevel(this.levelConfig.json, 'level-normal.json');
+        // Разбираются все три уровня, играется один: опечатка в тяжёлом должна
+        // найтись сейчас, а не после того, как игрок его выберет.
+        const levels = readLevels({
+            easy: this.easyLevelConfig.json,
+            normal: this.normalLevelConfig.json,
+            hard: this.hardLevelConfig.json,
+        });
+        this.level = levels[readDifficulty(this.difficulty, 'LevelRoot.difficulty')];
         this.behaviours = createFallBehaviours(items, this.level.fallTempo);
         this.planner = new FallingItemSpawnPlanner(items, this.level.spawn, new MathRandomSource());
         this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));

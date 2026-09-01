@@ -922,10 +922,19 @@
       "__uuid__": "3ce6c5bd-dd84-4e55-a5dd-0d7cb4d915a8",
       "__expectedType__": "cc.JsonAsset"
     },
-    "levelConfig": {
+    "easyLevelConfig": {
+      "__uuid__": "895beabb-c50e-42fe-a921-67121d222a0f",
+      "__expectedType__": "cc.JsonAsset"
+    },
+    "normalLevelConfig": {
       "__uuid__": "d5c1cce7-9e22-4242-a697-f40dfad5d31b",
       "__expectedType__": "cc.JsonAsset"
     },
+    "hardLevelConfig": {
+      "__uuid__": "0664d8b6-69f9-460e-848b-096db259e3f5",
+      "__expectedType__": "cc.JsonAsset"
+    },
+    "difficulty": "normal",
     "_id": "fcLevelRoot000000022",
     "basket": {
       "__id__": 36

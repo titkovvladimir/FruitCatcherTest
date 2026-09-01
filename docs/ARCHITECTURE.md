@@ -467,6 +467,7 @@ assets/scripts/
       fall/UniformFallBehaviour.ts
       fall/ZigzagFallBehaviour.ts
       fall/AcceleratedFallBehaviour.ts
+      fall/TempoFallBehaviour.ts         тот же путь, пройденный быстрее
       fall/FallBehaviourFactory.ts
       catch/CatchResolver.ts
       config/FallingItemConfig.ts
@@ -480,6 +481,7 @@ assets/scripts/
       basket/BasketControl.ts
   meta/
     logic/Difficulty.ts                easy | normal | hard
+    logic/LevelCatalog.ts              три конфига уровня, по одному на сложность
     logic/BestScores.ts                рекорд по каждой сложности, через IStorage
   ui/
     core/ScoreLabel.ts
