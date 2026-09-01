@@ -1,4 +1,4 @@
-import { array, number, object, string, variant } from '../../../utils/schema/builders';
+import { array, number, object, oneOf, string, variant } from '../../../utils/schema/builders';
 import { Infer } from '../../../utils/schema/Schema';
 
 /**
@@ -25,10 +25,27 @@ const FALL = variant('kind', {
 
 export type FallConfig = Infer<typeof FALL>;
 
+/**
+ * Чем предмет приходится игроку.
+ *
+ * `prize` — добыча: пойманная растит серию, упущенная её обрывает.
+ * `trap` — то, что ловить не надо: поймал — серия оборвалась. Сколько это
+ * стоит сверх серии, решают числа: у кислого фрукта ноль жизней и очки за
+ * поимку, у мухомора минус жизнь. Упущенная ловушка не стоит ничего — игрок
+ * поступил правильно.
+ *
+ * Вывести роль из чисел нельзя: у кислого фрукта и очки положительные, и жизни
+ * нетронуты — от добычи его отличает только то, чем он оказывается в серии.
+ */
+const ROLE = oneOf('prize', 'trap');
+
+export type ItemRole = Infer<typeof ROLE>;
+
 /** Один тип падающего предмета: и фрукт, и мухомор описываются одной строкой. */
 const ITEM = object({
     /** Ключ типа; он же имя в логах и в ошибках конфига. */
     id: string(),
+    role: ROLE,
     /** Имя картинки: по нему предмет находит свой спрайт. */
     texture: string(),
     /**

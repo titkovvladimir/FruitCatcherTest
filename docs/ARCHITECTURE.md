@@ -461,6 +461,7 @@ assets/scripts/
     logic/
       LevelSession.ts                  состояние раунда и его сигналы
       LevelOutcome.ts                  очки, поймано, промахов
+      ComboState.ts                    длина серии и её множитель
       LevelState.ts                    Idle | Running | Paused | Finished
       spawn/FallingItemSpawnPlanner.ts
       fall/FallBehaviour.ts
@@ -484,6 +485,7 @@ assets/scripts/
     logic/BestScores.ts                рекорд по каждой сложности, через IStorage
   ui/
     core/ScoreLabel.ts
+    core/ComboLabel.ts                 серия и множитель под счётом
     core/TimerLabel.ts
     core/LivesView.ts
     core/ScorePopup.ts                 всплывающее «+500» над пойманным
@@ -516,7 +518,7 @@ Game
 │  │  │     ├─ Mouth                   UITransform = линия и ширина проёма
 │  │  │     └─ BucketFront             последний → рисуется поверх
 │  │  ├─ LevelHud                      контейнер, гаснет вне раунда
-│  │  │  ├─ Score / Timer              Label в каждом
+│  │  │  ├─ Score / Combo / Timer      Label в каждом
 │  │  │  ├─ Lives                      Label: ♥ за жизнь, ♡ за потраченную
 │  │  │  └─ PauseButton
 │  │  └─ Panels/LevelResultPanel       Dimmer, итог, рекорд сложности,
@@ -544,6 +546,7 @@ Game
 |---|---|---|
 | `LevelSession` | `scoreChanged` | очки |
 | | `lifeLost` | осталось жизней |
+| | `comboChanged` | серия и множитель |
 | | `timeChanged` | секунд осталось |
 | | `stateChanged` | `LevelState` |
 | | `finished` | `LevelOutcome` |

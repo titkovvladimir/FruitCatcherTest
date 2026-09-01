@@ -1,52 +1,70 @@
 [
   {
     "id": "red-apple",
+    "role": "prize",
     "texture": "red-apple",
     "radius": 40,
     "score": 10,
     "lifeChange": 0,
     "weight": 30,
     "speed": 240,
-    "fall": { "kind": "uniform" }
+    "fall": {
+      "kind": "uniform"
+    }
   },
   {
     "id": "strawberry",
+    "role": "prize",
     "texture": "strawberry",
     "radius": 30,
     "score": 25,
     "lifeChange": 0,
     "weight": 15,
     "speed": 320,
-    "fall": { "kind": "uniform" }
+    "fall": {
+      "kind": "uniform"
+    }
   },
   {
     "id": "banana",
+    "role": "prize",
     "texture": "banana",
     "radius": 46,
     "score": 20,
     "lifeChange": 0,
     "weight": 20,
     "speed": 230,
-    "fall": { "kind": "zigzag", "amplitude": 70, "period": 1.6 }
+    "fall": {
+      "kind": "zigzag",
+      "amplitude": 70,
+      "period": 1.6
+    }
   },
   {
     "id": "watermelon",
+    "role": "prize",
     "texture": "watermelon",
     "radius": 60,
     "score": 30,
     "lifeChange": 0,
     "weight": 10,
     "speed": 120,
-    "fall": { "kind": "accelerated", "acceleration": 220 }
+    "fall": {
+      "kind": "accelerated",
+      "acceleration": 220
+    }
   },
   {
     "id": "mushroom",
+    "role": "trap",
     "texture": "mushroom",
     "radius": 44,
     "score": 0,
     "lifeChange": -1,
     "weight": 12,
     "speed": 260,
-    "fall": { "kind": "uniform" }
+    "fall": {
+      "kind": "uniform"
+    }
   }
 ]

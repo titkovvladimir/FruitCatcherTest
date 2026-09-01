@@ -1,4 +1,6 @@
 import { Signal, Subscribable } from '../../utils/Signal';
+import { ComboState } from './ComboState';
+import { FallingItemConfig } from './config/FallingItemConfig';
 import { LevelConfig } from './config/LevelConfig';
 import { LevelEnding, LevelOutcome } from './LevelOutcome';
 import { LevelState } from './LevelState';
@@ -18,10 +20,13 @@ export class LevelSession {
     private _lives = 0;
     private _maxLives = 0;
     private _timeLeft = 0;
+    private _streak = 0;
+    private _combo: LevelConfig['combo'] = { step: 1, max: 1 };
 
     private readonly _scoreChanged = new Signal<number>('scoreChanged');
     private readonly _lifeLost = new Signal<number>('lifeLost');
     private readonly _timeChanged = new Signal<number>('timeChanged');
+    private readonly _comboChanged = new Signal<ComboState>('comboChanged');
     private readonly _stateChanged = new Signal<LevelState>('stateChanged');
     private readonly _finished = new Signal<LevelOutcome>('finished');
 
@@ -38,6 +43,11 @@ export class LevelSession {
     /** Целых секунд до конца раунда; поднимается только когда цифра сменилась. */
     get timeChanged(): Subscribable<number> {
         return this._timeChanged;
+    }
+
+    /** Серия сменилась: выросла, оборвалась или началась заново. */
+    get comboChanged(): Subscribable<ComboState> {
+        return this._comboChanged;
     }
 
     get stateChanged(): Subscribable<LevelState> {
@@ -72,6 +82,11 @@ export class LevelSession {
         return this._maxLives;
     }
 
+    /** Серия и множитель сейчас. */
+    get combo(): ComboState {
+        return { streak: this._streak, multiplier: this.multiplier };
+    }
+
     /** Секунд до конца, как их видит игрок: округление вверх. */
     get secondsLeft(): number {
         return Math.ceil(this._timeLeft);
@@ -91,9 +106,12 @@ export class LevelSession {
         this._lives = config.lives;
         this._maxLives = config.lives;
         this._timeLeft = config.duration;
+        this._streak = 0;
+        this._combo = config.combo;
         this.setState('running');
         this._scoreChanged.emit(this._score);
         this._timeChanged.emit(this.secondsLeft);
+        this._comboChanged.emit(this.combo);
     }
 
     /**
@@ -110,6 +128,7 @@ export class LevelSession {
         this._lives = 0;
         this._maxLives = 0;
         this._timeLeft = 0;
+        this._streak = 0;
         this.setState('idle');
     }
 
@@ -154,33 +173,67 @@ export class LevelSession {
     }
 
     /**
-     * Предмет пойман. Очки и изменение жизней приходят числами из его типа:
-     * про яблоки и мухоморы раунд не знает, разница между ними — в данных.
+     * Предмет пойман; отдаёт начисленные очки — их показывает всплывашка.
+     *
+     * Про яблоки и мухоморы раунд по-прежнему не знает: чем предмет
+     * оказывается игроку, написано в его роли, а сколько это стоит — в его
+     * числах. Множитель серии идёт только на добычу: умножать им же очки за
+     * ловушку, которая эту серию и оборвала, было бы издевательством.
      */
-    applyCatch(score: number, lifeChange: number): void {
+    applyCatch(item: FallingItemConfig): number {
         if (this._state !== 'running') {
-            return;
+            return 0;
         }
         this._caught += 1;
-        if (score !== 0) {
-            this._score += score;
+        if (item.role === 'prize') {
+            this._streak += 1;
+            this._comboChanged.emit(this.combo);
+        } else {
+            this.breakStreak();
+        }
+        const awarded = item.role === 'prize' ? item.score * this.multiplier : item.score;
+        if (awarded !== 0) {
+            this._score += awarded;
             this._scoreChanged.emit(this._score);
         }
-        if (lifeChange !== 0) {
-            this._lives = Math.max(0, this._lives + lifeChange);
+        if (item.lifeChange !== 0) {
+            this._lives = Math.max(0, this._lives + item.lifeChange);
             this._lifeLost.emit(this._lives);
             if (this._lives === 0) {
                 this.finish('lives');
             }
         }
+        return awarded;
     }
 
-    /** Предмет улетел мимо корзины. Ничего не стоит, но идёт в итог раунда. */
-    applyMiss(): void {
+    /**
+     * Предмет улетел мимо корзины. Жизней не стоит, но упущенная добыча
+     * обрывает серию: без этого промах не стоит ничего, а игра сводится к
+     * «води корзину под всё подряд».
+     *
+     * Упущенная ловушка не стоит ничего — игрок поступил правильно.
+     */
+    applyMiss(item: FallingItemConfig): void {
         if (this._state !== 'running') {
             return;
         }
         this._missed += 1;
+        if (item.role === 'prize') {
+            this.breakStreak();
+        }
+    }
+
+    /** Во сколько раз серия увеличивает очки за добычу. */
+    private get multiplier(): number {
+        return Math.min(1 + Math.floor(this._streak / this._combo.step), this._combo.max);
+    }
+
+    private breakStreak(): void {
+        if (this._streak === 0) {
+            return;
+        }
+        this._streak = 0;
+        this._comboChanged.emit(this.combo);
     }
 
     private finish(ending: LevelEnding): void {

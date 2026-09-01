@@ -13,6 +13,7 @@ import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
 import { IConfigSource } from '../platform/config/IConfigSource';
 import { JsonConfigSource } from '../platform/config/JsonConfigSource';
+import { ComboLabel } from '../ui/core/ComboLabel';
 import { LivesView } from '../ui/core/LivesView';
 import { PauseButton } from '../ui/core/PauseButton';
 import { PauseOverlay } from '../ui/core/PauseOverlay';
@@ -87,6 +88,9 @@ export class LevelRoot extends Component {
     @property(ScoreLabel)
     scoreLabel: ScoreLabel = null!;
 
+    @property(ComboLabel)
+    comboLabel: ComboLabel = null!;
+
     @property(TimerLabel)
     timerLabel: TimerLabel = null!;
 
@@ -132,6 +136,7 @@ export class LevelRoot extends Component {
         // Виджеты связываются до старта раунда: иначе первый счёт и первая
         // секунда прошли бы мимо них, а снимок они возьмут уже обнулённый.
         this.scoreLabel.bind(session);
+        this.comboLabel.bind(session);
         this.timerLabel.bind(session);
         this.livesView.bind(session);
         this.pauseButton.bind(session);
@@ -235,7 +240,7 @@ export class LevelRoot extends Component {
             item.tick(step);
             const verdict = resolveCatch(item.motion, mouth, floor);
             if (verdict === 'caught') {
-                session.applyCatch(item.config.score, item.config.lifeChange);
+                session.applyCatch(item.config);
                 // Пойманным мог оказаться последний мухомор: раунд кончился
                 // прямо здесь и убрал поле целиком. Возвращать в пул нечего, и
                 // следующий обход прочитал бы уже пустое место.
@@ -244,7 +249,7 @@ export class LevelRoot extends Component {
                 }
                 this.spawner.recycle(item);
             } else if (verdict === 'missed') {
-                session.applyMiss();
+                session.applyMiss(item.config);
                 this.spawner.recycle(item);
             }
         }

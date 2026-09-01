@@ -47,6 +47,24 @@ export function string(): Schema<string> {
     };
 }
 
+/**
+ * Одно из перечисленных слов.
+ *
+ * От `variant` отличается тем, что за словом не стоит своих полей: это метка, а
+ * не ветка. В типе получается объединение строковых литералов, и `switch` по
+ * нему компилятор разбирает так же полно.
+ */
+export function oneOf<T extends string>(...values: readonly T[]): Schema<T> {
+    return {
+        parse(value: unknown, path: string): T {
+            if (typeof value !== 'string' || (values as readonly string[]).indexOf(value) === -1) {
+                throw SchemaError.expected(path, `одно из: ${values.join(', ')}`, value);
+            }
+            return value as T;
+        },
+    };
+}
+
 export function number(range: NumberRange = {}): Schema<number> {
     return {
         parse(value: unknown, path: string): number {
