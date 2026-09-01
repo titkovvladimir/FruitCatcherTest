@@ -1,4 +1,5 @@
 import { _decorator, Component, JsonAsset, Node } from 'cc';
+import { DEBUG } from 'cc/env';
 import { BestScores } from '../meta/logic/BestScores';
 import { Difficulty } from '../meta/logic/Difficulty';
 import { LEVEL_DOCUMENTS, LevelCatalog, readLevels } from '../meta/logic/LevelCatalog';
@@ -6,10 +7,19 @@ import { JsonConfigSource } from '../platform/config/JsonConfigSource';
 import { LocalStorage } from '../platform/storage/LocalStorage';
 import { LevelResultPanel } from '../ui/core/panels/LevelResultPanel';
 import { DifficultyButton } from '../ui/meta/DifficultyButton';
+import { Signal } from '../utils/Signal';
 import { SubscriptionBag } from '../utils/SubscriptionBag';
 import { LevelRoot } from './LevelRoot';
 
 const { ccclass, property } = _decorator;
+
+/**
+ * Порог сторожа подписок: столько подписчиков у одного сигнала считается
+ * нормой. Больше всех их у состояния раунда — счёт, таймер, жизни, комбо,
+ * панели, — и это пять-шесть; восемь оставляет запас на рост экрана и всё ещё
+ * втрое меньше того, во что превращается утечка на пуле.
+ */
+const SIGNAL_WARN_AFTER = 8;
 
 /**
  * Сборка игры: всё, что вокруг раунда. Выбор сложности, рекорд по каждой, покой
@@ -61,6 +71,17 @@ export class GameRoot extends Component {
     private readonly best = new BestScores(new LocalStorage());
     private levels: LevelCatalog | null = null;
     private current: Difficulty | null = null;
+
+    /**
+     * Сторож подписок вооружается здесь, а не в `start`: подписываются все в
+     * `start` и позже, а порядок `start` между сборщиками не определён —
+     * включённый там сторож пропустил бы ровно те подписки, ради которых
+     * заведён. В релизной сборке порог нулевой, и `on` не платит за него
+     * ничем: сам `Signal` про отладку не знает и знать не должен.
+     */
+    onLoad(): void {
+        Signal.warnAfter = DEBUG ? SIGNAL_WARN_AFTER : 0;
+    }
 
     start(): void {
         // Разбираются все три уровня, играется один: опечатка в тяжёлом должна
