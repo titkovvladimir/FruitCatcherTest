@@ -2,10 +2,9 @@
   "duration": 75,
   "lives": 2,
   "fallTempo": 1,
-  "comboMax": 12,
   "dangerProximity": 0.8,
   "spawn": {
-    "minInterval": 0.28,
-    "maxInterval": 0.55
+    "minInterval": 0.45,
+    "maxInterval": 0.79
   }
 }
