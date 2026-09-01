@@ -86,7 +86,7 @@ export class LevelRoot extends Component {
     start(): void {
         const items = readFallingItems(this.itemsConfig.json, 'falling-items.json');
         this.level = readLevel(this.levelConfig.json, 'level-normal.json');
-        this.behaviours = createFallBehaviours(items);
+        this.behaviours = createFallBehaviours(items, this.level.fallTempo);
         this.planner = new FallingItemSpawnPlanner(items, this.level.spawn, new MathRandomSource());
         this.basket.bind(readBasket(this.basketConfig.json, 'basket.json'));
 

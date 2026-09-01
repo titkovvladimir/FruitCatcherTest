@@ -1,6 +1,7 @@
 import { FallingItemConfig } from '../config/FallingItemConfig';
 import { AcceleratedFallBehaviour } from './AcceleratedFallBehaviour';
 import { FallBehaviour } from './FallBehaviour';
+import { TempoFallBehaviour } from './TempoFallBehaviour';
 import { UniformFallBehaviour } from './UniformFallBehaviour';
 import { ZigzagFallBehaviour } from './ZigzagFallBehaviour';
 
@@ -22,11 +23,20 @@ export function createFallBehaviour(config: FallingItemConfig): FallBehaviour {
     }
 }
 
-/** Готовые поведения по типам: по одному на тип, как и задумано. */
-export function createFallBehaviours(configs: readonly FallingItemConfig[]): Map<string, FallBehaviour> {
+/**
+ * Готовые поведения по типам: по одному на тип, как и задумано.
+ *
+ * `tempo` приходит из настроек уровня и на единице не стоит ничего: обёртка
+ * заводится, только когда уровень действительно меняет темп.
+ */
+export function createFallBehaviours(
+    configs: readonly FallingItemConfig[],
+    tempo: number,
+): Map<string, FallBehaviour> {
     const behaviours = new Map<string, FallBehaviour>();
     for (const config of configs) {
-        behaviours.set(config.id, createFallBehaviour(config));
+        const behaviour = createFallBehaviour(config);
+        behaviours.set(config.id, tempo === 1 ? behaviour : new TempoFallBehaviour(behaviour, tempo));
     }
     return behaviours;
 }
