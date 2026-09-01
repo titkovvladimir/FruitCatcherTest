@@ -447,7 +447,6 @@ assets/scripts/
   utils/
     Signal.ts                          Signal<T> + Subscribable<T> + сторож
     SubscriptionBag.ts                 подписки скопом, чистятся одной строкой
-    NodePool.ts
     schema/Schema.ts                   Schema<T> + Infer<S> + SchemaError
     schema/builders.ts                 из чего собирают описание формы данных
     random/RandomSource.ts
