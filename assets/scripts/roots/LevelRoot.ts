@@ -211,6 +211,7 @@ export class LevelRoot extends Component {
      */
     stop(): void {
         this.spawner.recycleAll();
+        this.popups.recycleAll();
         this.planner = null;
         this.session.reset();
     }
