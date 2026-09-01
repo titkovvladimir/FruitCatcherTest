@@ -3,5 +3,13 @@
   "uuid": "c6b191c1-7e7f-4662-9728-6e850762a82e",
   "creator": {
     "version": "3.8.8"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --skipLibCheck",
+    "check-scene": "node tools/check-scene.js",
+    "check": "npm run typecheck && npm run check-scene"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2"
   }
 }
