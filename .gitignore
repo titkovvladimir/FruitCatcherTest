@@ -8,7 +8,7 @@ temp/
 local/
 build/
 profiles/
-native
+/native
 CLAUDE.md
 #//////////////////////////
 # NPM
