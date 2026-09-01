@@ -10,6 +10,8 @@ import { FallBehaviour } from '../core/logic/fall/FallBehaviour';
 import { createFallBehaviours } from '../core/logic/fall/FallBehaviourFactory';
 import { LevelSession } from '../core/logic/LevelSession';
 import { FallingItemSpawnPlanner } from '../core/logic/spawn/FallingItemSpawnPlanner';
+import { ScoreLabel } from '../ui/core/ScoreLabel';
+import { TimerLabel } from '../ui/core/TimerLabel';
 import { MathRandomSource } from '../utils/random/MathRandomSource';
 import { SubscriptionBag } from '../utils/SubscriptionBag';
 
@@ -45,6 +47,12 @@ export class LevelRoot extends Component {
     @property(JsonAsset)
     basketConfig: JsonAsset = null!;
 
+    @property(ScoreLabel)
+    scoreLabel: ScoreLabel = null!;
+
+    @property(TimerLabel)
+    timerLabel: TimerLabel = null!;
+
     private level: LevelConfig | null = null;
     private session: LevelSession | null = null;
     private planner: FallingItemSpawnPlanner | null = null;
@@ -64,6 +72,10 @@ export class LevelRoot extends Component {
 
         const session = new LevelSession(this.level);
         this.session = session;
+        // Виджеты связываются до старта раунда: иначе первый счёт и первая
+        // секунда прошли бы мимо них, а снимок они возьмут уже обнулённый.
+        this.scoreLabel.bind(session);
+        this.timerLabel.bind(session);
         this.subs.add(session.finished, () => this.spawner.recycleAll());
         session.start();
     }
