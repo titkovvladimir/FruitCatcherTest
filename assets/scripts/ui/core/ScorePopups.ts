@@ -11,11 +11,17 @@ const RISE = 90;
 const GOOD = new Color(255, 255, 255, 255);
 const BAD = new Color(235, 90, 80, 255);
 
-/** Надпись в полёте: узел, её возраст, цвет и с чего начиналась высота. */
+/**
+ * Надпись в полёте: узел, её возраст и с чего начиналась высота.
+ *
+ * Цвет живёт своим экземпляром на всю жизнь надписи и меняется только
+ * прозрачностью: новый `Color` на каждом кадре — это мусор в кадровом коде на
+ * ровном месте.
+ */
 interface Popup {
     readonly node: Node;
     readonly label: Label;
-    readonly color: Color;
+    readonly tint: Color;
     readonly startY: number;
     age: number;
 }
@@ -73,9 +79,10 @@ export class ScorePopups extends Component {
         node.parent = this.node;
         node.setPosition(x, y);
         const label = node.getComponent(Label)!;
+        const tint = new Color(shown.color);
         label.string = shown.text;
-        label.color = shown.color;
-        this.living.push({ node, label, color: shown.color, startY: y, age: 0 });
+        label.color = tint;
+        this.living.push({ node, label, tint, startY: y, age: 0 });
     }
 
     /** Все надписи разом убираются вместе с полем — на конце раунда. */
@@ -100,8 +107,8 @@ export class ScorePopups extends Component {
             // Гаснет во второй половине жизни: в первой надпись должна успеть
             // прочитаться, а не растаять на глазах.
             const fade = Math.max(0, (progress - 0.5) * 2);
-            const color = popup.color;
-            popup.label.color = new Color(color.r, color.g, color.b, Math.round(255 * (1 - fade)));
+            popup.tint.a = Math.round(255 * (1 - fade));
+            popup.label.color = popup.tint;
         }
     }
 

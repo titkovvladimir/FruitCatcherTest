@@ -4021,7 +4021,7 @@
     "_fontSize": 24,
     "_fontFamily": "Arial",
     "_lineHeight": 32,
-    "_overflow": 0,
+    "_overflow": 2,
     "_enableWrapText": false,
     "_font": null,
     "_isSystemFontUsed": true,
