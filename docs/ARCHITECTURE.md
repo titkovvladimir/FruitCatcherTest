@@ -448,6 +448,8 @@ assets/scripts/
     Signal.ts                          Signal<T> + Subscribable<T> + сторож
     SubscriptionBag.ts                 подписки скопом, чистятся одной строкой
     NodePool.ts
+    schema/Schema.ts                   Schema<T> + Infer<S> + SchemaError
+    schema/builders.ts                 из чего собирают описание формы данных
     random/RandomSource.ts
     random/MathRandomSource.ts
   platform/
@@ -470,7 +472,6 @@ assets/scripts/
       config/FallingItemConfig.ts
       config/LevelConfig.ts
       config/BasketConfig.ts
-      config/checks.ts
     components/
       Field.ts
       fallingItem/FallingItem.ts
