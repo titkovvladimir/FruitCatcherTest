@@ -1,6 +1,7 @@
 import { _decorator, Component, Game, game, JsonAsset } from 'cc';
 import { Basket } from '../core/components/basket/Basket';
 import { Field } from '../core/components/Field';
+import { BasketControl } from '../core/components/basket/BasketControl';
 import { FallingItemSpawner } from '../core/components/fallingItem/FallingItemSpawner';
 import { resolveCatch } from '../core/logic/catch/CatchResolver';
 import { readBasket } from '../core/logic/config/BasketConfig';
@@ -38,6 +39,9 @@ export class LevelRoot extends Component {
 
     @property(Basket)
     basket: Basket = null!;
+
+    @property(BasketControl)
+    basketControl: BasketControl = null!;
 
     /** Таблица типов падающих предметов. */
     @property(JsonAsset)
@@ -96,6 +100,12 @@ export class LevelRoot extends Component {
         this.pauseButton.bind(session);
         this.pauseOverlay.bind(session);
         this.subs.add(this.pauseButton.clicked, () => session.togglePause());
+        // Управление слушает мышь только пока раунд идёт. Иначе прицел живёт и
+        // на паузе: корзина стоит, а цель уезжает за курсором — и снятие паузы
+        // отправляет её туда, куда игрок не целился.
+        this.subs.add(session.stateChanged, state => {
+            this.basketControl.enabled = state === 'running';
+        });
         // Вкладку свернули — раунд встаёт сам. Движок в это время не тикает
         // вовсе, так что доиграться без игрока раунд не может; пауза нужна для
         // возвращения: иначе игра оживает в ту же секунду, когда игрок ещё

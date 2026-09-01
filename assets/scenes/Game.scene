@@ -951,6 +951,9 @@
     },
     "pauseOverlay": {
       "__id__": 96
+    },
+    "basketControl": {
+      "__id__": 37
     }
   },
   {
