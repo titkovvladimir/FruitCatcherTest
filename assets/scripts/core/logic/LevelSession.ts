@@ -98,6 +98,19 @@ export class LevelSession {
         }
     }
 
+    /**
+     * Пауза и снятие с паузы — одно действие игрока: та же кнопка, то же место
+     * экрана. Знание «что делает нажатие» живёт здесь, а не в сборщике: там оно
+     * было бы правилом игры в файле, где правил быть не должно.
+     */
+    togglePause(): void {
+        if (this._state === 'running') {
+            this.pause();
+        } else {
+            this.resume();
+        }
+    }
+
     tick(dt: number): void {
         if (this._state !== 'running') {
             return;
