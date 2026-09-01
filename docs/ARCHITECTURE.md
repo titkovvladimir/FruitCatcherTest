@@ -516,7 +516,7 @@ Game
 │  │  │     └─ BucketFront             последний → рисуется поверх
 │  │  ├─ LevelHud                      контейнер без скрипта
 │  │  │  ├─ Score / Timer              Label в каждом
-│  │  │  ├─ Lives                      Layout, наполняется Heart.prefab
+│  │  │  ├─ Lives                      Label: ♥ за жизнь, ♡ за потраченную
 │  │  │  └─ PauseButton
 │  │  └─ Panels/LevelResultPanel       Dimmer, итог, рекорд сложности,
 │  │                                   RestartButton, MenuButton
@@ -527,7 +527,10 @@ Game
    └─ Meta                             GameRoot
 ```
 
-Префабы: `FallingItem.prefab`, `Heart.prefab`, `ScorePopup.prefab`.
+Префабы: `FallingItem.prefab`, `ScorePopup.prefab`. Сердца среди выданных
+картинок нет, поэтому жизни рисуются символами в одном `Label`, а не рядом
+узлов из префаба: своё сердце пришлось бы либо рисовать, либо собирать из
+фруктов — а фрукт в этой игре уже означает добычу.
 Конфиги: `falling-items.json`, `basket.json`, `level-easy.json`,
 `level-normal.json`, `level-hard.json`.
 
