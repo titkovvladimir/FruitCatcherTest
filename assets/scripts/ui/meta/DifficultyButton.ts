@@ -34,11 +34,28 @@ export class DifficultyButton extends Component {
     @property(Label)
     label: Label = null!;
 
+    /** Строка рекорда под названием сложности. */
+    @property(Label)
+    record: Label = null!;
+
     private readonly _clicked = new Signal<Difficulty>('difficultyClicked');
     private value: Difficulty = 'normal';
 
     get clicked(): Subscribable<Difficulty> {
         return this._clicked;
+    }
+
+    /** Сложность этой кнопки. Спрашивает мета, чтобы дать ей её рекорд. */
+    get difficultyValue(): Difficulty {
+        return this.value;
+    }
+
+    /**
+     * Рекорд под названием. Ноль — рекорда ещё нет, и строка пустая: «рекорд 0»
+     * на нетронутой сложности выглядел бы как ноль очков, а не как её отсутствие.
+     */
+    showRecord(score: number): void {
+        this.record.string = score > 0 ? `рекорд ${score}` : '';
     }
 
     /**

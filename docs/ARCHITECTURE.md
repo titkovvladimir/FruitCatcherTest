@@ -526,6 +526,7 @@ Game
 │     └─ Menu                          показан в покое, спрятан на раунд
 │        ├─ Title / Hint               Label в каждом
 │        └─ EasyButton / NormalButton / HardButton
+│                                      в каждой Label названия и Label рекорда
 └─ Logics
    ├─ Core                             LevelRoot, FallingItemSpawner
    └─ Meta                             GameRoot

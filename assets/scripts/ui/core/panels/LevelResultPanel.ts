@@ -20,6 +20,10 @@ export class LevelResultPanel extends Component {
     @property(Label)
     summary: Label = null!;
 
+    /** Строка рекорда: своя, чтобы её было видно отдельно от итога раунда. */
+    @property(Label)
+    record: Label = null!;
+
     /** Узел кнопки: панель слушает его нажатие и переизлучает своим событием. */
     @property(Node)
     restartButton: Node = null!;
@@ -49,9 +53,15 @@ export class LevelResultPanel extends Component {
         this.menuButton.off(Button.EventType.CLICK, this.onMenu, this);
     }
 
-    show(outcome: LevelOutcome): void {
+    /**
+     * `best` — рекорд этой сложности, уже с учётом только что сыгранного
+     * раунда; `beaten` — побил ли его игрок этим раундом. Оба приходят числом и
+     * флагом: панель показывает, а считает мета.
+     */
+    show(outcome: LevelOutcome, best: number, beaten: boolean): void {
         this.title.string = outcome.ending === 'lives' ? 'Жизни кончились' : 'Время вышло';
         this.summary.string = `Очки: ${outcome.score}\nПоймано: ${outcome.caught}   мимо: ${outcome.missed}`;
+        this.record.string = beaten ? 'Новый рекорд!' : `Рекорд: ${best}`;
         this.node.active = true;
     }
 
